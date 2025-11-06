@@ -1,0 +1,66 @@
+name: eventyzze
+description: "A new Flutter project."
+
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.9.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+  gradient_borders: ^1.0.2
+  flutter_svg: ^2.2.1
+  flutter_otp_text_field: ^1.5.1+1
+  firebase_core: ^4.2.1
+  firebase_auth: ^6.1.2
+  get: ^4.7.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/svgs/
+
+  fonts:
+    - family: Lato
+      fonts:
+        - asset: assets/fonts/Lato-Black.ttf
+          weight: 900
+        - asset: assets/fonts/Lato-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Lato-Regular.ttf
+          weight: 400
+
+    - family: OpenSans
+      fonts:
+        - asset: assets/fonts/OpenSans-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/OpenSans-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/OpenSans-SemiBold.ttf
+          weight: 600
+
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter_18pt-Bold.ttf
+          weight: 700
+
+    - family: Raleway
+      fonts:
+        - asset: assets/fonts/Raleway-SemiBold.ttf
+          weight: 700
+
+
+

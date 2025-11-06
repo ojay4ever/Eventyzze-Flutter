@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "383501473775",
+    "project_id": "eventyzze-38809",
+    "storage_bucket": "eventyzze-38809.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:383501473775:android:9eee9f1c40b62a25cec81a",
+        "android_client_info": {
+          "package_name": "com.eventyzze.eventyzze.eventyzze"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCHoafHa2aGBbdIf4BfS5OzTdQee8NKEUQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
