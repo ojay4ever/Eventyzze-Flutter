@@ -27,6 +27,7 @@ dependencies:
   talker_bloc_logger: ^5.0.2
   injectable: ^2.6.0
   dio_smart_retry: ^7.0.1
+  socket_io_client: ^3.1.2
 
 dev_dependencies:
   flutter_test:
