@@ -4,8 +4,6 @@ import '../cache/shared_preferences_helper.dart';
 import '../repositories/profileRepository/profile_repository.dart';
 import '../repositories/profileRepository/profile_repository_impl.dart';
 
-
-
 final getIt = GetIt.instance;
 
 Future<void> configureDependencies() async {
