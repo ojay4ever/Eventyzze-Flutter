@@ -4,9 +4,8 @@ import 'package:eventyzze/helper/navigation_helper.dart';
 import 'package:eventyzze/views/authScreens/authController/auth_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
-import '../../../customWidget/custom_button.dart';
-import '../../../customWidget/custom_text_field.dart';
+import '../../../customWidgets/custom_button.dart';
+import '../../../customWidgets/custom_text_field.dart';
 import '../signUpScreen/sign_up_screen.dart';
 
 
