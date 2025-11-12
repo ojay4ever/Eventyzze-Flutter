@@ -1,10 +1,9 @@
 import 'package:eventyzze/helper/navigation_helper.dart';
 import 'package:eventyzze/views/authScreens/signUpScreen/sign_up_last_screen.dart';
 import 'package:flutter/material.dart';
-
 import '../../../config/app_font.dart';
 import '../../../config/app_theme.dart';
-import '../../../customWidget/custom_button.dart';
+import '../../../customWidgets/custom_button.dart';
 
 class PreferenceSelectionScreen extends StatefulWidget {
   const PreferenceSelectionScreen({super.key});

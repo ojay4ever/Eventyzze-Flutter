@@ -1,5 +1,5 @@
-import 'package:eventyzze/customWidget/custom_button.dart';
-import 'package:eventyzze/customWidget/custom_text_field.dart';
+import 'package:eventyzze/customWidgets/custom_button.dart';
+import 'package:eventyzze/customWidgets/custom_text_field.dart';
 import 'package:eventyzze/enums/enums.dart';
 import 'package:eventyzze/helper/navigation_helper.dart';
 import 'package:eventyzze/views/authScreens/preferenceSelection/preference_selection_screen.dart';

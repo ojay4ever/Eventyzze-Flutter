@@ -6,10 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:eventyzze/config/app_font.dart';
 import 'package:eventyzze/config/app_images.dart';
-
-import '../../customWidget/mini_event_tile.dart';
-import '../../customWidget/custom_categories.dart';
-import '../../customWidget/custom_event_card.dart';
+import '../../customWidgets/mini_event_tile.dart';
+import '../../customWidgets/custom_categories.dart';
+import '../../customWidgets/custom_event_card.dart';
 
 class HomePageViewer extends StatefulWidget {
   const HomePageViewer({super.key});

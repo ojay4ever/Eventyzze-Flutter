@@ -1,8 +1,8 @@
 import 'package:eventyzze/config/app_font.dart';
 import 'package:eventyzze/config/app_images.dart';
 import 'package:eventyzze/config/app_theme.dart';
-import 'package:eventyzze/customWidget/custom_button.dart';
-import 'package:eventyzze/customWidget/custom_text_field.dart';
+import 'package:eventyzze/customWidgets/custom_button.dart';
+import 'package:eventyzze/customWidgets/custom_text_field.dart';
 import 'package:eventyzze/helper/navigation_helper.dart';
 import 'package:eventyzze/views/authScreens/loginScreen/login_screen.dart';
 import 'package:flutter/material.dart';
