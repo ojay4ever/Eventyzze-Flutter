@@ -1,7 +1,7 @@
 import 'package:eventyzze/config/app_theme.dart';
 import 'package:eventyzze/services/dio_config.dart';
 import 'package:eventyzze/views/authScreens/authController/auth_controller.dart';
-import 'package:eventyzze/views/welcome/welcome_screen.dart';
+import 'package:eventyzze/views/splashScreen/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:get/get.dart';
@@ -33,7 +33,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
       theme: AppTheme.theme,
-      home: WelcomeScreen(),
+      home: SplashScreen(),
     );
   }
 }

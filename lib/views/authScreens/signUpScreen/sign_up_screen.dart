@@ -37,18 +37,43 @@ class SignUpScreen extends StatelessWidget {
                 Text(
                   'Create an account with Eventyze and explore a world of endless entertainment',
                   style: TextStyle(
-                      fontWeight: FontWeight.w400,
-                      fontFamily: AppFonts.inter,
-                      fontSize: 16,
-                      color: const Color(0xFF000000).withAlpha(128)),
+                    fontWeight: FontWeight.w400,
+                    fontFamily: AppFonts.inter,
+                    fontSize: 16,
+                    color: const Color(0xFF000000).withAlpha(128),
+                  ),
                 ),
                 SizedBox(height: 50),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     CustomTextField(
+                      hintText: 'Full Name',
+                      controller: controller.nameController,
+                    ),
+                    Obx(() {
+                      if (controller.nameError.value.isEmpty) {
+                        return SizedBox.shrink();
+                      } else {
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 8.0, left: 8.0),
+                          child: Text(
+                            controller.nameError.value,
+                            style: TextStyle(color: Colors.red, fontSize: 12),
+                          ),
+                        );
+                      }
+                    }),
+                  ],
+                ),
+                SizedBox(height: 14),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    CustomTextField(
                       hintText: 'Email',
                       controller: controller.emailController,
+                      keyboardType: TextInputType.emailAddress,
                     ),
                     Obx(() {
                       if (controller.emailError.value.isEmpty) {
@@ -90,15 +115,19 @@ class SignUpScreen extends StatelessWidget {
                   ],
                 ),
                 SizedBox(height: 24),
-                Obx(() => controller.isLoading.value
-                    ? Center(child: CircularProgressIndicator(color: AppTheme.kPrimaryColor,))
-                    : CustomButton(
-                        text: 'Create an account',
-                        onTap: controller.signUp,
-                      )),
-                SizedBox(
-                  height: 18,
+                Obx(
+                  () => controller.isLoading.value
+                      ? Center(
+                          child: CircularProgressIndicator(
+                            color: AppTheme.kPrimaryColor,
+                          ),
+                        )
+                      : CustomButton(
+                          text: 'Create an account',
+                          onTap: controller.signUp,
+                        ),
                 ),
+                SizedBox(height: 18),
                 Row(
                   children: [
                     Expanded(
@@ -112,10 +141,11 @@ class SignUpScreen extends StatelessWidget {
                       child: Text(
                         "or",
                         style: TextStyle(
-                            color: Colors.grey.withAlpha(179),
-                            fontSize: 16,
-                            fontFamily: AppFonts.lato,
-                            fontWeight: FontWeight.w400),
+                          color: Colors.grey.withAlpha(179),
+                          fontSize: 16,
+                          fontFamily: AppFonts.lato,
+                          fontWeight: FontWeight.w400,
+                        ),
                       ),
                     ),
                     Expanded(
@@ -126,29 +156,43 @@ class SignUpScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                SizedBox(
-                  height: 16,
+                SizedBox(height: 16),
+                Obx(
+                  () => controller.isLoading.value
+                      ? Center(
+                          child: CircularProgressIndicator(
+                            color: AppTheme.kPrimaryColor,
+                          ),
+                        )
+                      : CustomButton(
+                          text: "Continue with Google",
+                          onTap: () async {
+                            await controller.signInWithGoogle();
+                          },
+                          backgroundColor: Colors.white,
+                          borderColor: Color(0xFFFF8038),
+                          imagePath: AppImages.google,
+                        ),
                 ),
-                CustomButton(
-                  text: "Continue with Google",
-                  onTap: () {},
-                  backgroundColor: Colors.white,
-                  borderColor: Color(0xFFFF8038),
-                  imagePath: AppImages.google,
+                SizedBox(height: 14),
+                Obx(
+                  () => controller.isLoading.value
+                      ? Center(
+                          child: CircularProgressIndicator(
+                            color: AppTheme.kPrimaryColor,
+                          ),
+                        )
+                      : CustomButton(
+                          text: "Continue with Apple",
+                          onTap: () async {
+                            await controller.signInWithApple();
+                          },
+                          backgroundColor: Colors.white,
+                          borderColor: Color(0xFFFF8038),
+                          imagePath: AppImages.apple,
+                        ),
                 ),
-                SizedBox(
-                  height: 14,
-                ),
-                CustomButton(
-                  text: "Continue with Apple",
-                  onTap: () {},
-                  backgroundColor: Colors.white,
-                  borderColor: Color(0xFFFF8038),
-                  imagePath: AppImages.apple,
-                ),
-                SizedBox(
-                  height: 20,
-                ),
+                SizedBox(height: 20),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -162,7 +206,10 @@ class SignUpScreen extends StatelessWidget {
                     ),
                     GestureDetector(
                       onTap: () {
-                        NavigationHelper.goToNavigatorScreen(context, LoginScreen());
+                        NavigationHelper.goToNavigatorScreen(
+                          context,
+                          LoginScreen(),
+                        );
                       },
                       child: Text(
                         "Log in",
@@ -174,7 +221,7 @@ class SignUpScreen extends StatelessWidget {
                       ),
                     ),
                   ],
-                )
+                ),
               ],
             ),
           ),

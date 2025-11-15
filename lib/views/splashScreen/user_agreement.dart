@@ -1,3 +1,4 @@
+import 'package:eventyzze/customWidgets/custom_elevated_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../config/app_theme.dart';
@@ -203,38 +204,27 @@ class _UserAgreementScreenState extends State<UserAgreementScreen> {
                             Row(
                               children: [
                                 Expanded(
-                                  child: OutlinedButton(
-                                    style: OutlinedButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 14,
-                                      ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(14),
-                                      ),
-                                    ),
-                                    onPressed: () async {
+                                  child: CustomElevatedButton(
+                                    shadowColor: Colors.transparent,
+                                    borderColor: AppTheme.kButtonColor,
+                                    gradientColors: [Colors.transparent,Colors.transparent],
+                                    fontSize: 12,
+                                    onPressed:  () {
                                       SystemNavigator.pop();
                                     },
-                                    child: const Text('Decline'),
+                                    text: 'Decline',
                                   ),
                                 ),
-                                const SizedBox(width: 12),
+                                const SizedBox(width: 10),
                                 Expanded(
-                                  child: ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 14,
-                                      ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(14),
-                                      ),
-                                    ),
+                                  child: CustomElevatedButton(
+                                    fontSize: 12,
                                     onPressed: _accepted
                                         ? () {
                                       Navigator.of(context).pop(true);
                                     }
                                         : null,
-                                    child: const Text('Accept & Continue'),
+                                    text: 'Accept & Continue',
                                   ),
                                 ),
                               ],

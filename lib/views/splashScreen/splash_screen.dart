@@ -90,7 +90,6 @@ class _SplashScreenState extends State<SplashScreen> {
         );
       }
     } else {
-      print("HI I am here to be: ${dbId.isNotEmpty} ${user!=null}");
       if (!mounted) return;
       NavigationHelper.goToNavigatorScreen(
         context,

@@ -21,6 +21,15 @@
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
+	<key>CFBundleURLTypes</key>
+        <array>
+        	<dict>
+        		<key>CFBundleURLSchemes</key>
+        		<array>
+        			<string>383501473775-vnjd71adur1pbdhbf1j9vh26aorfjqpj.apps.googleusercontent.com</string>
+        		</array>
+            </dict>
+        </array>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
@@ -34,6 +43,9 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<array>
+                <string>YOUR_REVERSED_CLIENT_ID</string>
+            </array>
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>

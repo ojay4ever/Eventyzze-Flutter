@@ -7,12 +7,25 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:383501473775:android:9eee9f1c40b62a25cec81a",
+        "mobilesdk_app_id": "1:383501473775:android:c867a27f273ac398cec81a",
         "android_client_info": {
-          "package_name": "com.eventyzze.eventyzze.eventyzze"
+          "package_name": "com.eventyzze.eventyzze"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "383501473775-ee2a4mb2imbp46q027ggjiof2hfhg9cc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.eventyzze.eventyzze",
+            "certificate_hash": "8e213ab5d111cb1260d87c479f10ad9b5c396bf7"
+          }
+        },
+        {
+          "client_id": "383501473775-g36oqd404va776mg1trhql69f02r8t17.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCHoafHa2aGBbdIf4BfS5OzTdQee8NKEUQ"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "383501473775-g36oqd404va776mg1trhql69f02r8t17.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "383501473775-vnjd71adur1pbdhbf1j9vh26aorfjqpj.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.eventyzze.eventyzze"
+              }
+            }
+          ]
         }
       }
     }
