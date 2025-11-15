@@ -4,8 +4,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../cache/pref_keys.dart';
 
-
-
 class AuthService {
   static final AuthService _instance = AuthService._internal();
   factory AuthService() => _instance;
@@ -50,19 +48,32 @@ class AuthService {
 
   Future<String?> _storeToken() async {
     try {
+      await initialize();
       final User? user = currentUser;
       if (user == null) {
+        log('No current user found, clearing token');
         await clearToken();
         return null;
       }
 
+      log('Fetching fresh token for user: ${user.uid}');
       final IdTokenResult result = await user.getIdTokenResult(true);
+
       if (result.token != null) {
         await _prefs!.setString("token", result.token!);
+        log('Token stored successfully');
+      } else {
+        log('Warning: getIdTokenResult returned null token');
       }
+
       if (result.expirationTime != null) {
-        await _prefs!.setString("tokenExpiry", result.expirationTime!.toIso8601String());
+        await _prefs!.setString(
+          "tokenExpiry",
+          result.expirationTime!.toIso8601String(),
+        );
+        log('Token expiry stored: ${result.expirationTime}');
       }
+
       return result.token;
     } catch (e) {
       log('Error storing token: $e');

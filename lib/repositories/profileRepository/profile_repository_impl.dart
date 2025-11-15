@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:dio/dio.dart';
 import '../../config/get_it.dart';
 import '../../constants/api_constants.dart';
@@ -10,20 +9,71 @@ class ProfileRepositoryImpl implements ProfileRepository {
   final LoggerService logger = getIt<LoggerService>();
   final Dio _dio = DioConfig.dio;
 
-
   @override
   Future<UserModel?> updateProfile(FormData data) async {
     try {
       final response = await _dio.post(
         '${ApiConstants.baseUrl}/profile/updateUserProfile',
         data: data,
-        options: Options(headers: {'Content-Type': 'multipart/form-data'}),
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final res = response.data;
         final userJson = res is Map<String, dynamic>
-            ? (res['data'] ?? res)
+            ? (res['user'] ?? res['data'] ?? res)
+            : <String, dynamic>{};
+        return UserModel.fromJson(userJson);
+      }
+      return null;
+    } on DioException catch (dioError) {
+      logger.error('Dio error: ${dioError.message}');
+      return null;
+    } catch (e) {
+      logger.error('Unexpected error: $e');
+      return null;
+    }
+  }
+
+  @override
+  Future<UserModel?> updateProfileData(Map<String, dynamic> data) async {
+    try {
+      final formData = FormData.fromMap(data);
+
+      final response = await _dio.post(
+        '${ApiConstants.baseUrl}/profile/updateUserProfile',
+        data: formData,
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final res = response.data;
+        final userJson = res is Map<String, dynamic>
+            ? (res['user'] ?? res['data'] ?? res)
+            : <String, dynamic>{};
+        return UserModel.fromJson(userJson);
+      }
+      return null;
+    } on DioException catch (dioError) {
+      logger.error('Dio error: ${dioError.message}');
+      return null;
+    } catch (e) {
+      logger.error('Unexpected error: $e');
+      return null;
+    }
+  }
+
+  @override
+  Future<UserModel?> uploadProfileImage(String imageUrl) async {
+    try {
+      final response = await _dio.post(
+        '${ApiConstants.baseUrl}/profile/upload/profile-image',
+        data: {'imageUrl': imageUrl},
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final res = response.data;
+        // Backend returns { success: true, user: userProfile }
+        final userJson = res is Map<String, dynamic>
+            ? (res['user'] ?? res['data'] ?? res)
             : <String, dynamic>{};
         return UserModel.fromJson(userJson);
       }
@@ -47,7 +97,7 @@ class ProfileRepositoryImpl implements ProfileRepository {
       if (response.statusCode == 200) {
         final res = response.data;
         final userJson = res is Map<String, dynamic>
-            ? (res['data'] ?? res)
+            ? (res['user'] ?? res['data'] ?? res)
             : <String, dynamic>{};
         return UserModel.fromJson(userJson);
       }
@@ -91,7 +141,7 @@ class ProfileRepositoryImpl implements ProfileRepository {
   Future<void> updateFcmToken(Map<String, dynamic> data) async {
     try {
       final response = await DioConfig.dio.post(
-        "${ApiConstants.baseUrl}profile/update-fcm-token",
+        "${ApiConstants.baseUrl}/profile/update-fcm-token",
         data: data,
       );
 
@@ -104,6 +154,4 @@ class ProfileRepositoryImpl implements ProfileRepository {
       logger.error("Error updating FCM token: $e");
     }
   }
-
-
 }

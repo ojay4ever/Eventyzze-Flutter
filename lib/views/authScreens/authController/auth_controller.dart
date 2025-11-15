@@ -2,10 +2,13 @@ import 'dart:developer';
 import 'dart:io';
 import 'package:eventyzze/cache/shared_preferences_helper.dart';
 import 'package:eventyzze/config/get_it.dart';
+import 'package:eventyzze/customWidgets/home_tab.dart';
 import 'package:eventyzze/helper/navigation_helper.dart';
 import 'package:eventyzze/repositories/profileRepository/profile_repository.dart';
 import 'package:eventyzze/utils/custom_snack_bar.dart';
-import 'package:eventyzze/views/authScreens/emailConfirm/email_confirm_screen.dart';
+import 'package:eventyzze/customWidgets/app_loading_dialog.dart';
+import 'package:eventyzze/views/authScreens/emailVerification/email_verification_screen.dart';
+import 'package:eventyzze/views/authScreens/profielSetUp/profile_setup_screen.dart';
 import 'package:eventyzze/views/homeScreens/home_page_viewer.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -14,8 +17,8 @@ import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import '../../../repositories/authRepository/auth_repository.dart';
+import '../../../services/auth_services.dart';
 import '../../../services/socket_service.dart';
 
 class AuthController extends GetxController {
@@ -65,15 +68,29 @@ class AuthController extends GetxController {
       );
 
       if (!userCredential.user!.emailVerified) {
-        CustomSnackBar.error(
-          title: 'Verification Needed',
-          message: 'Please verify your email before logging in.',
+        isLoading.value = false;
+        // Navigate to email verification screen
+        Get.offAll(() => const EmailVerificationScreen());
+        CustomSnackBar.warning(
+          title: 'Email Not Verified',
+          message: 'Please verify your email to continue.',
         );
         return;
       }
 
+      // Ensure token is stored after login
+      final token = await AuthService().getBearerToken();
+      if (token == null || token.isEmpty) {
+        CustomSnackBar.error(
+          title: 'Error',
+          message: 'Failed to retrieve authentication token. Please try again.',
+        );
+        isLoading.value = false;
+        return;
+      }
+
       CustomSnackBar.success(title: 'Success', message: 'Login successful!');
-      Get.offAll(() => HomePageViewer());
+      NavigationHelper.goToNavigatorScreen(Get.context!, HomeTab(),finish: true);
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
         CustomSnackBar.error(
@@ -148,9 +165,34 @@ class AuthController extends GetxController {
         throw Exception('Failed to get ID token');
       }
 
+      // Register/Create user in database
+      final firebaseUser = userCredential.user!;
+      final registerData = {
+        'uid': firebaseUser.uid,
+        'name': nameController.text.trim(),
+        'email': firebaseUser.email ?? '',
+      };
+
+      final registeredUser = await _authRepository.register(registerData);
+
+      if (registeredUser != null && registeredUser.dbId.isNotEmpty) {
+        // Save dbId to SharedPreferences
+        await _sharedPrefsHelper.setDatabaseId(registeredUser.dbId);
+      } else {
+        CustomSnackBar.error(
+          title: 'Error',
+          message: 'Failed to register user in database. Please try again.',
+        );
+        isLoading.value = false;
+        return;
+      }
+
       await userCredential.user!.sendEmailVerification();
 
-      NavigationHelper.goToNavigatorScreen(Get.context!, ConfirmEmailScreen());
+      AppLoadingDialog.hide();
+
+      // Navigate to Email Verification Screen
+      Get.offAll(() => const EmailVerificationScreen());
 
       CustomSnackBar.success(
         title: 'Success',
@@ -158,6 +200,7 @@ class AuthController extends GetxController {
             'Account created! A verification email has been sent to your email.',
       );
     } on FirebaseAuthException catch (e) {
+      AppLoadingDialog.hide();
       if (e.code == 'email-already-in-use') {
         CustomSnackBar.error(
           title: 'Error',
@@ -172,6 +215,7 @@ class AuthController extends GetxController {
         );
       }
     } catch (e) {
+      AppLoadingDialog.hide();
       CustomSnackBar.error(
         title: 'Error',
         message: 'Failed to create account. Please try again.',
@@ -223,6 +267,7 @@ class AuthController extends GetxController {
             final savedUser = await _authRepository.register(userData);
 
             if (savedUser == null) {
+              AppLoadingDialog.hide();
               CustomSnackBar.error(
                 title: "Limit Reached",
                 message:
@@ -247,6 +292,7 @@ class AuthController extends GetxController {
             );
 
             if (fetchedUser == null) {
+              AppLoadingDialog.hide();
               CustomSnackBar.error(
                 title: "Error",
                 message: "Failed to fetch user profile",
@@ -255,15 +301,31 @@ class AuthController extends GetxController {
               return null;
             }
 
-            SocketService().connect(fetchedUser.dbId);
+            AppLoadingDialog.hide();
 
-            CustomSnackBar.success(
-              title: 'Success',
-              message: 'Signed in with Google successfully!',
-            );
+            // For new Google sign-ups, navigate to profile setup
+            // Check if this is a new user by checking if bio is empty (new users won't have completed setup)
+            // You can also check preferences.categories from backend if needed
+            final isNewUser =
+                fetchedUser.profilePhoto == null ||
+                fetchedUser.profilePhoto!.isEmpty;
 
-            Get.offAll(() => HomePageViewer());
+            if (isNewUser) {
+              // Navigate to profile setup for new users
+              Get.offAll(() => const ProfileSetupScreen());
+            } else {
+              SocketService().connect(fetchedUser.dbId);
+
+              CustomSnackBar.success(
+                title: 'Success',
+                message: 'Signed in with Google successfully!',
+              );
+
+              NavigationHelper.goToNavigatorScreen(Get.context!, HomeTab(), finish: true);
+
+            }
           } on Exception catch (e) {
+            AppLoadingDialog.hide();
             final errorMsg = e.toString();
             if (errorMsg.contains("Maximum 3 accounts")) {
               CustomSnackBar.error(
@@ -283,9 +345,11 @@ class AuthController extends GetxController {
         }
       }
 
+      AppLoadingDialog.hide();
       isLoading.value = false;
       return user;
     } catch (e) {
+      AppLoadingDialog.hide();
       log("signInWithGoogle error: $e");
       CustomSnackBar.error(
         title: "Error",
@@ -351,10 +415,17 @@ class AuthController extends GetxController {
           }
         }
 
-        final displayName =
-            credential.givenName != null && credential.familyName != null
-            ? '${credential.givenName} ${credential.familyName}'
-            : user.displayName ?? 'User';
+        // Generate random name for Apple if not available
+        String displayName;
+        if (credential.givenName != null && credential.familyName != null) {
+          displayName = '${credential.givenName} ${credential.familyName}';
+        } else if (user.displayName != null && user.displayName!.isNotEmpty) {
+          displayName = user.displayName!;
+        } else {
+          // Generate random name
+          final random = DateTime.now().millisecondsSinceEpoch;
+          displayName = 'User$random';
+        }
 
         await _sharedPrefsHelper.setUserId(user.uid);
 
@@ -371,6 +442,7 @@ class AuthController extends GetxController {
           final savedUser = await _authRepository.register(userData);
 
           if (savedUser == null) {
+            AppLoadingDialog.hide();
             CustomSnackBar.error(
               title: "Limit Reached",
               message:
@@ -380,7 +452,6 @@ class AuthController extends GetxController {
             return null;
           }
 
-          // Update FCM token
           final fcmToken = await FirebaseMessaging.instance.getToken();
           if (fcmToken != null && fcmToken.isNotEmpty) {
             Map<String, dynamic> req = {
@@ -397,6 +468,7 @@ class AuthController extends GetxController {
           );
 
           if (fetchedUser == null) {
+            AppLoadingDialog.hide();
             CustomSnackBar.error(
               title: "Error",
               message: "Failed to fetch user profile",
@@ -405,16 +477,32 @@ class AuthController extends GetxController {
             return null;
           }
 
-          // Connect socket
-          SocketService().connect(fetchedUser.dbId);
+          AppLoadingDialog.hide();
 
-          CustomSnackBar.success(
-            title: 'Success',
-            message: 'Signed in with Apple successfully!',
-          );
+          final isNewUser =
+              fetchedUser.profilePhoto == null ||
+              fetchedUser.profilePhoto!.isEmpty;
 
-          Get.offAll(() => HomePageViewer());
+          if (isNewUser) {
+            NavigationHelper.goToNavigatorScreen(
+              Get.context!,
+              const ProfileSetupScreen(),
+            );
+          } else {
+            SocketService().connect(fetchedUser.dbId);
+
+            CustomSnackBar.success(
+              title: 'Success',
+              message: 'Signed in with Apple successfully!',
+            );
+            NavigationHelper.goToNavigatorScreen(
+              Get.context!,
+              const HomeTab(),
+              finish: true,
+            );
+          }
         } on Exception catch (e) {
+          AppLoadingDialog.hide();
           final errorMsg = e.toString();
           if (errorMsg.contains("Maximum 3 accounts")) {
             CustomSnackBar.error(
@@ -433,9 +521,11 @@ class AuthController extends GetxController {
         }
       }
 
+      AppLoadingDialog.hide();
       isLoading.value = false;
       return user;
     } on SignInWithAppleAuthorizationException catch (e) {
+      AppLoadingDialog.hide();
       if (e.code != AuthorizationErrorCode.canceled) {
         CustomSnackBar.error(
           title: 'Error',
@@ -446,6 +536,7 @@ class AuthController extends GetxController {
       isLoading.value = false;
       return null;
     } catch (e) {
+      AppLoadingDialog.hide();
       log("❌ signInWithApple error: $e");
       CustomSnackBar.error(
         title: "Error",

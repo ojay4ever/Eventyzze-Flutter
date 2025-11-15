@@ -1,6 +1,8 @@
 import 'package:bloc/bloc.dart';
 import 'package:eventyzze/repositories/authRepository/auth_repository.dart';
 import 'package:eventyzze/repositories/authRepository/auth_repository_impl.dart';
+import 'package:eventyzze/repositories/eventRepository/event_repository.dart';
+import 'package:eventyzze/repositories/eventRepository/event_repository_impl.dart';
 import 'package:eventyzze/repositories/profileRepository/profile_repository.dart';
 import 'package:eventyzze/repositories/profileRepository/profile_repository_impl.dart';
 import 'package:flutter/foundation.dart';
@@ -23,11 +25,7 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton<SharedPrefsHelper>(
     () => SharedPrefsHelper(sharedPreferences: prefs),
   );
-  getIt.registerLazySingleton<ProfileRepository>(
-    () => ProfileRepositoryImpl(),
-  );
-  getIt.registerLazySingleton<AuthRepository>(
-    () => AuthRepositoryImpl(),
-  );
-
+  getIt.registerLazySingleton<ProfileRepository>(() => ProfileRepositoryImpl());
+  getIt.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl());
+  getIt.registerLazySingleton<EventRepository>(() => EventRepositoryImpl());
 }

@@ -14,7 +14,10 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<UserModel?> login(Map<String, dynamic> userData) async {
     try {
-      final response = await _dio.post('${ApiConstants.baseUrl}/auth/login', data: userData);
+      final response = await _dio.post(
+        '${ApiConstants.baseUrl}/auth/login',
+        data: userData,
+      );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final res = response.data;
@@ -54,10 +57,25 @@ class AuthRepositoryImpl implements AuthRepository {
       if (response.statusCode == 200 || response.statusCode == 201) {
         final res = response.data;
         final userJson = res is Map<String, dynamic>
-            ? (res['data'] ?? res)
+            ? (res['data'] ?? res['user'] ?? res)
             : <String, dynamic>{};
-        return UserModel.fromJson(userJson);
 
+        final userMap = userJson is Map<String, dynamic>
+            ? {
+                'uid': userJson['firebaseUid'] ?? userJson['uid'] ?? '',
+                'name': userJson['name'] ?? '',
+                'email': userJson['email'] ?? '',
+                '_id': userJson['_id']?.toString() ?? '',
+                'id': userJson['_id']?.toString() ?? '',
+                'isVerified': false,
+                'uniqueId': userJson['uniqueId']?.toString() ?? '0',
+                'following': '0',
+                'followers': '0',
+                'friends': '0',
+              }
+            : <String, dynamic>{};
+
+        return UserModel.fromMap(userMap);
       }
       logger.error('Server returned error: ${response.statusCode}');
       return null;

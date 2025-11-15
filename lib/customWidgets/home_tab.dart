@@ -1,6 +1,7 @@
-import 'package:eventyzze/views/HostProfileScreens/host_profile_events.dart';
 import 'package:eventyzze/views/favoritesScreens/favorites_screen.dart';
 import 'package:eventyzze/views/homeScreens/home_page_viewer.dart';
+import 'package:eventyzze/views/profileScreens/profile_page.dart';
+import 'package:eventyzze/views/eventScreens/create_event_screen.dart';
 import 'package:flutter/material.dart';
 
 import '../views/NotificationScreens/notifications_screen.dart';
@@ -26,16 +27,22 @@ class _HomeTabState extends State<HomeTab> {
       HomePageViewer(),
       const FavoritesScreen(),
       const NotificationsScreen(),
-      HostProfileEvents(),
-
+      ProfilePage(),
     ];
-
   }
 
   void _onNavItemTapped(int index) {
     setState(() => _selectedIndex = index);
   }
 
+  void _onCenterButtonTapped() {
+    Navigator.of(context, rootNavigator: false).push(
+      MaterialPageRoute(
+        builder: (context) => const CreateEventScreen(),
+        fullscreenDialog: false,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,6 +51,7 @@ class _HomeTabState extends State<HomeTab> {
       bottomNavigationBar: CustomBottomNavBar(
         currentIndex: _selectedIndex,
         onTap: _onNavItemTapped,
+        onCenterButtonTap: _onCenterButtonTapped,
       ),
     );
   }

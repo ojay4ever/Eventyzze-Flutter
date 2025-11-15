@@ -8,6 +8,7 @@ class CustomButton extends StatefulWidget {
   final bool showLoader;
   final Color? backgroundColor;
   final Color? borderColor;
+  final Color? textColor;
   final String? imagePath;
 
   const CustomButton({
@@ -18,6 +19,7 @@ class CustomButton extends StatefulWidget {
     this.backgroundColor,
     this.borderColor,
     this.imagePath,
+    this.textColor = Colors.black,
   });
 
   @override
@@ -105,7 +107,7 @@ class _CustomButtonState extends State<CustomButton>
                     fontFamily: AppFonts.lato,
                     fontWeight: FontWeight.w700,
                     fontSize: 16,
-                    color: Colors.black,
+                    color: widget.textColor,
                   ),
                 ),
               ],

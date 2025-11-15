@@ -1,6 +1,6 @@
 import 'package:eventyzze/config/app_font.dart';
 import 'package:eventyzze/config/app_images.dart';
-import 'package:eventyzze/config/app_theme.dart';
+import 'package:eventyzze/customWidgets/app_loading_dialog.dart';
 import 'package:eventyzze/customWidgets/custom_button.dart';
 import 'package:eventyzze/customWidgets/custom_text_field.dart';
 import 'package:eventyzze/helper/navigation_helper.dart';
@@ -115,17 +115,14 @@ class SignUpScreen extends StatelessWidget {
                   ],
                 ),
                 SizedBox(height: 24),
-                Obx(
-                  () => controller.isLoading.value
-                      ? Center(
-                          child: CircularProgressIndicator(
-                            color: AppTheme.kPrimaryColor,
-                          ),
-                        )
-                      : CustomButton(
-                          text: 'Create an account',
-                          onTap: controller.signUp,
-                        ),
+                CustomButton(
+                  text: 'Create an account',
+                  onTap: () {
+                    if (!controller.isLoading.value) {
+                      AppLoadingDialog.show(message: 'Creating account...');
+                      controller.signUp();
+                    }
+                  },
                 ),
                 SizedBox(height: 18),
                 Row(
@@ -157,40 +154,34 @@ class SignUpScreen extends StatelessWidget {
                   ],
                 ),
                 SizedBox(height: 16),
-                Obx(
-                  () => controller.isLoading.value
-                      ? Center(
-                          child: CircularProgressIndicator(
-                            color: AppTheme.kPrimaryColor,
-                          ),
-                        )
-                      : CustomButton(
-                          text: "Continue with Google",
-                          onTap: () async {
-                            await controller.signInWithGoogle();
-                          },
-                          backgroundColor: Colors.white,
-                          borderColor: Color(0xFFFF8038),
-                          imagePath: AppImages.google,
-                        ),
+                CustomButton(
+                  text: "Continue with Google",
+                  onTap: () async {
+                    if (!controller.isLoading.value) {
+                      AppLoadingDialog.show(
+                        message: 'Signing in with Google...',
+                      );
+                      await controller.signInWithGoogle();
+                    }
+                  },
+                  backgroundColor: Colors.white,
+                  borderColor: Color(0xFFFF8038),
+                  imagePath: AppImages.google,
                 ),
                 SizedBox(height: 14),
-                Obx(
-                  () => controller.isLoading.value
-                      ? Center(
-                          child: CircularProgressIndicator(
-                            color: AppTheme.kPrimaryColor,
-                          ),
-                        )
-                      : CustomButton(
-                          text: "Continue with Apple",
-                          onTap: () async {
-                            await controller.signInWithApple();
-                          },
-                          backgroundColor: Colors.white,
-                          borderColor: Color(0xFFFF8038),
-                          imagePath: AppImages.apple,
-                        ),
+                CustomButton(
+                  text: "Continue with Apple",
+                  onTap: () async {
+                    if (!controller.isLoading.value) {
+                      AppLoadingDialog.show(
+                        message: 'Signing in with Apple...',
+                      );
+                      await controller.signInWithApple();
+                    }
+                  },
+                  backgroundColor: Colors.white,
+                  borderColor: Color(0xFFFF8038),
+                  imagePath: AppImages.apple,
                 ),
                 SizedBox(height: 20),
                 Row(

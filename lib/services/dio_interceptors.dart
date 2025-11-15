@@ -6,7 +6,6 @@ import '../config/get_it.dart';
 import 'api_error_types.dart' show APIErrorClassifier, APIErrorType;
 import 'connection_status_manager.dart';
 
-
 class LoggerServiceInterceptor extends Interceptor {
   final LoggerService _logger = getIt<LoggerService>();
 
@@ -131,14 +130,34 @@ class AuthInterceptor extends Interceptor {
     RequestInterceptorHandler handler,
   ) async {
     try {
-
       final token = await AuthService().getBearerToken();
 
       log('debug token: $token');
 
-      options.headers['Authorization'] = 'Bearer $token';
+      if (token != null && token.isNotEmpty) {
+        options.headers['Authorization'] = 'Bearer $token';
+      } else {
+        _logger.warning('No token available for request: ${options.uri}');
+        // Try to get a fresh token one more time
+        try {
+          final freshToken = await AuthService().getBearerToken();
+          if (freshToken != null && freshToken.isNotEmpty) {
+            options.headers['Authorization'] = 'Bearer $freshToken';
+            _logger.info('Retrieved fresh token for request: ${options.uri}');
+          } else {
+            _logger.error(
+              'Failed to retrieve token after retry for: ${options.uri}',
+            );
+          }
+        } catch (e) {
+          _logger.error('Error retrieving fresh token: $e');
+        }
+      }
 
-      if (!options.headers.containsKey('Content-Type')) {
+      // Only set Content-Type if it's not already set and not multipart/form-data
+      // For FormData, Dio will automatically set Content-Type with boundary
+      if (!options.headers.containsKey('Content-Type') &&
+          !(options.data is FormData)) {
         options.headers['Content-Type'] = 'application/json';
       }
     } on Exception catch (e, stackTrace) {
@@ -152,7 +171,6 @@ class AuthInterceptor extends Interceptor {
   void onError(DioException err, ErrorInterceptorHandler handler) {
     if (err.response?.statusCode == 401) {
       _logger.warning('Authentication failed - token may be expired');
-
     }
 
     super.onError(err, handler);

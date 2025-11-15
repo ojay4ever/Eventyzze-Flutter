@@ -1,48 +1,42 @@
-import 'package:eventyzze/helper/navigation_helper.dart';
-import 'package:eventyzze/views/authScreens/signUpScreen/sign_up_last_screen.dart';
+import 'package:eventyzze/customWidgets/app_loading_indicator.dart';
+import 'package:eventyzze/customWidgets/custom_button.dart';
+import 'package:eventyzze/views/authScreens/preferenceSelection/preference_selection_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import '../../../config/app_font.dart';
 import '../../../config/app_theme.dart';
-import '../../../customWidgets/custom_button.dart';
 
-class PreferenceSelectionScreen extends StatefulWidget {
+class PreferenceSelectionScreen extends StatelessWidget {
   const PreferenceSelectionScreen({super.key});
 
   @override
-  State<PreferenceSelectionScreen> createState() =>
-      _PreferenceSelectionScreenState();
-}
-
-class _PreferenceSelectionScreenState extends State<PreferenceSelectionScreen> {
-  final List<String> interests = [
-    "Live concerts",
-    "Live sport matches",
-    "Technology",
-    "Gaming",
-    "Science",
-    "Networking",
-    "Fashion",
-    "Beauty",
-    "Fitness classes",
-    "Fashion",
-    "Art",
-    "Cultural events",
-    "Literature",
-    "Seminars",
-    "Nature",
-    "Charity",
-    "Cooking",
-    "Dance",
-    "Travel",
-    "Movie premier",
-    "Film festivals",
-  ];
-
-  List<String> selectedItems = [];
-
-  @override
   Widget build(BuildContext context) {
+    final controller = Get.put(PreferenceSelectionController());
     final theme = Theme.of(context);
+
+    final List<String> interests = [
+      "Live concerts",
+      "Live sport matches",
+      "Technology",
+      "Gaming",
+      "Science",
+      "Networking",
+      "Fashion",
+      "Beauty",
+      "Fitness classes",
+      "Fashion",
+      "Art",
+      "Cultural events",
+      "Literature",
+      "Seminars",
+      "Nature",
+      "Charity",
+      "Cooking",
+      "Dance",
+      "Travel",
+      "Movie premier",
+      "Film festivals",
+    ];
 
     return Scaffold(
       body: SafeArea(
@@ -54,15 +48,13 @@ class _PreferenceSelectionScreenState extends State<PreferenceSelectionScreen> {
               Row(
                 children: [
                   InkWell(
-                    onTap: () {
-                      NavigationHelper.goBackToPreviousPage(context);
-                    },
-                    child: Icon(Icons.arrow_back, color: Colors.black),
+                    onTap: () => Get.back(),
+                    child: const Icon(Icons.arrow_back, color: Colors.black),
                   ),
-                  SizedBox(width: 8),
+                  const SizedBox(width: 8),
                   Text(
-                    'Profile Setup',
-                    style: theme.textTheme.displayLarge!.copyWith(
+                    'Select Preferences',
+                    style: theme.textTheme.displayLarge?.copyWith(
                       color: Colors.black,
                       fontWeight: FontWeight.w700,
                       fontSize: 24,
@@ -72,7 +64,7 @@ class _PreferenceSelectionScreenState extends State<PreferenceSelectionScreen> {
               ),
               const SizedBox(height: 12),
               const Text(
-                "Customize your recommendations and let us\nknow what you love",
+                "Customize your recommendations and let us\nknow what you love (Select up to 4)",
                 style: TextStyle(
                   color: AppTheme.halfBlack,
                   fontSize: 16,
@@ -80,62 +72,83 @@ class _PreferenceSelectionScreenState extends State<PreferenceSelectionScreen> {
                   fontWeight: FontWeight.w400,
                 ),
               ),
-
-              const SizedBox(height: 40),
-
+              Obx(
+                () => controller.selectedItems.isNotEmpty
+                    ? Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text(
+                          'Selected: ${controller.selectedItems.length}/${controller.maxSelections}',
+                          style: TextStyle(
+                            color: AppTheme.kPrimaryColor,
+                            fontSize: 14,
+                            fontFamily: AppFonts.lato,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      )
+                    : const SizedBox.shrink(),
+              ),
+              const SizedBox(height: 20),
               Expanded(
                 child: SingleChildScrollView(
                   child: Wrap(
                     spacing: 10,
                     runSpacing: 12,
                     children: interests.map((item) {
-                      final bool isSelected = selectedItems.contains(item);
-                      return GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            isSelected
-                                ? selectedItems.remove(item)
-                                : selectedItems.add(item);
-                          });
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            color: isSelected
-                                ? Colors.orange.shade100
-                                : Colors.white,
-                            border: Border.all(
+                      return Obx(() {
+                        final bool isSelected = controller.isSelected(item);
+                        return GestureDetector(
+                          onTap: () => controller.toggleSelection(item),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(8),
                               color: isSelected
-                                  ? Colors.orange
-                                  : Color(0xFF949494),
-                              width: 0.5,
+                                  ? AppTheme.kPrimaryColor.withValues(
+                                      alpha: 0.1,
+                                    )
+                                  : Colors.white,
+                              border: Border.all(
+                                color: isSelected
+                                    ? AppTheme.kPrimaryColor
+                                    : const Color(0xFF949494),
+                                width: isSelected ? 2 : 0.5,
+                              ),
+                            ),
+                            child: Text(
+                              item,
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: isSelected
+                                    ? AppTheme.kPrimaryColor
+                                    : Colors.black,
+                                fontWeight: isSelected
+                                    ? FontWeight.w600
+                                    : FontWeight.w400,
+                                fontFamily: AppFonts.lato,
+                              ),
                             ),
                           ),
-                          child: Text(
-                            item,
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: isSelected
-                                  ? Colors.orange.shade800
-                                  : Colors.black,
-                              fontWeight: FontWeight.w400,
-                              fontFamily: AppFonts.lato,
-                            ),
-                          ),
-                        ),
-                      );
+                        );
+                      });
                     }).toList(),
                   ),
                 ),
               ),
-              CustomButton(text: "Next", onTap: () {
-                NavigationHelper.goToNavigatorScreen(context, SignUpLastScreen());
-              }),
-              SizedBox(height: 40),
+              Obx(
+                () => controller.isLoading.value
+                    ? const AppLoadingIndicator(
+                        message: 'Saving preferences...',
+                      )
+                    : CustomButton(
+                        text: "Continue",
+                        onTap: controller.savePreferencesAndContinue,
+                      ),
+              ),
+              const SizedBox(height: 40),
             ],
           ),
         ),

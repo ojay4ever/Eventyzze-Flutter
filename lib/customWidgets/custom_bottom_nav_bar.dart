@@ -8,6 +8,7 @@ import '../config/app_theme.dart';
 class CustomBottomNavBar extends StatelessWidget {
   final int currentIndex;
   final Function(int) onTap;
+  final VoidCallback? onCenterButtonTap;
   final Color selectedColor;
   final Color unselectedColor;
 
@@ -15,6 +16,7 @@ class CustomBottomNavBar extends StatelessWidget {
     super.key,
     required this.currentIndex,
     required this.onTap,
+    this.onCenterButtonTap,
     this.selectedColor = AppTheme.kPrimaryColor,
     this.unselectedColor = const Color(0xFF808191),
   });
@@ -28,7 +30,9 @@ class CustomBottomNavBar extends StatelessWidget {
           final slotWidth = constraints.maxWidth / 5;
           const double indicatorWidth = 50;
 
-          final visualIndex = currentIndex >= 2 ? currentIndex + 1 : currentIndex;
+          final visualIndex = currentIndex >= 2
+              ? currentIndex + 1
+              : currentIndex;
 
           final double indicatorLeft =
               visualIndex * slotWidth + (slotWidth - indicatorWidth) / 2;
@@ -48,17 +52,17 @@ class CustomBottomNavBar extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    Expanded(
-                      child: _buildNavItem(AppImages.home, "Home", 0),
-                    ),
+                    Expanded(child: _buildNavItem(AppImages.home, "Home", 0)),
                     Expanded(
                       child: _buildNavItem(AppImages.heart, "Favourite", 1),
                     ),
+                    Expanded(child: _buildCenterButton()),
                     Expanded(
-                      child: _buildCenterButton(),
-                    ),
-                    Expanded(
-                      child: _buildNavItem(AppImages.notification, "Notifications", 2),
+                      child: _buildNavItem(
+                        AppImages.notification,
+                        "Notifications",
+                        2,
+                      ),
                     ),
                     Expanded(
                       child: _buildNavItem(AppImages.profile, "Profile", 3),
@@ -70,7 +74,10 @@ class CustomBottomNavBar extends StatelessWidget {
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.easeOut,
                 top: 0,
-                left: indicatorLeft.clamp(0.0, constraints.maxWidth - indicatorWidth),
+                left: indicatorLeft.clamp(
+                  0.0,
+                  constraints.maxWidth - indicatorWidth,
+                ),
                 child: Container(
                   width: indicatorWidth,
                   height: 5,
@@ -126,19 +133,18 @@ class CustomBottomNavBar extends StatelessWidget {
   Widget _buildCenterButton() {
     return Transform.translate(
       offset: const Offset(0, -6),
-      child: Container(
-        width: 33.06,
-        height: 33.45,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(9),
-          border: Border.all(color: const Color(0xFF808191), width: 1.2),
-          color: Colors.transparent,
-        ),
-        alignment: Alignment.center,
-        child: const Icon(
-          Icons.add,
-          size: 20,
-          color: Color(0xFF808191),
+      child: GestureDetector(
+        onTap: onCenterButtonTap,
+        child: Container(
+          width: 33.06,
+          height: 33.45,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(9),
+            border: Border.all(color: const Color(0xFF808191), width: 1.2),
+            color: Colors.transparent,
+          ),
+          alignment: Alignment.center,
+          child: const Icon(Icons.add, size: 20, color: Color(0xFF808191)),
         ),
       ),
     );

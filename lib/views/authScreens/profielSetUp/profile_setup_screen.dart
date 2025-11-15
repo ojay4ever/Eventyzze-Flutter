@@ -1,31 +1,19 @@
+import 'package:eventyzze/config/app_theme.dart';
+import 'package:eventyzze/customWidgets/app_loading_dialog.dart';
 import 'package:eventyzze/customWidgets/custom_button.dart';
 import 'package:eventyzze/customWidgets/custom_text_field.dart';
-import 'package:eventyzze/enums/enums.dart';
-import 'package:eventyzze/helper/navigation_helper.dart';
-import 'package:eventyzze/views/authScreens/preferenceSelection/preference_selection_screen.dart';
+import 'package:eventyzze/views/authScreens/profielSetUp/profile_setup_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import '../../../config/app_utils.dart';
 
-class ProfileSetupScreen extends StatefulWidget {
+class ProfileSetupScreen extends StatelessWidget {
   const ProfileSetupScreen({super.key});
-
-  @override
-  State<ProfileSetupScreen> createState() => _ProfileSetupScreenState();
-}
-
-class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
-  final TextEditingController _bioController = TextEditingController();
-  final int _maxBioLength = 500;
-
-  @override
-  void dispose() {
-    _bioController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     CustomScreenUtil.init(context);
+    final controller = Get.put(ProfileSetupController());
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -38,26 +26,59 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SizedBox(height: 12.h),
+                  SizedBox(height: CustomScreenUtil.height(12)),
                   Center(
-                    child: Stack(
-                      alignment: Alignment.bottomRight,
-                      children: [
-                        Container(
-                          width: 100,
-                          height: 100,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: const Color(0xFF000000).withValues(alpha: 0.4),
+                    child: Obx(
+                      () => Stack(
+                        alignment: Alignment.bottomRight,
+                        children: [
+                          Container(
+                            width: 100,
+                            height: 100,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: const Color(
+                                0xFF000000,
+                              ).withValues(alpha: 0.4),
+                              border: Border.all(
+                                color: AppTheme.kPrimaryColor,
+                                width: 2,
+                              ),
+                            ),
+                            child: ClipOval(
+                              child: controller.selectedImage.value != null
+                                  ? Image.file(
+                                      controller.selectedImage.value!,
+                                      fit: BoxFit.cover,
+                                    )
+                                  : const Icon(
+                                      Icons.person,
+                                      size: 70,
+                                      color: Colors.white,
+                                    ),
+                            ),
                           ),
-                          child: const Icon(
-                            Icons.person,
-                            size: 70,
-                            color: Colors.white,
+                          GestureDetector(
+                            onTap: controller.showImageSourceDialog,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: AppTheme.kPrimaryColor,
+                                border: Border.all(
+                                  color: Colors.white,
+                                  width: 2,
+                                ),
+                              ),
+                              padding: const EdgeInsets.all(6),
+                              child: const Icon(
+                                Icons.camera_alt,
+                                size: 16,
+                                color: Colors.white,
+                              ),
+                            ),
                           ),
-                        ),
-                        const Icon(Icons.edit, size: 18, color: Colors.grey),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: 35),
@@ -70,11 +91,14 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    "Set a name that would be visible to others",
+                    "Set a username that would be visible to others",
                     style: theme.textTheme.bodyMedium,
                   ),
                   const SizedBox(height: 10),
-                  const CustomTextField(hintText: 'Username'),
+                  CustomTextField(
+                    hintText: 'Username (optional)',
+                    controller: controller.usernameController,
+                  ),
                   const SizedBox(height: 25),
                   Text(
                     "Bio",
@@ -90,34 +114,34 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                   ),
                   const SizedBox(height: 10),
                   CustomTextField(
-                    controller: _bioController,
-                    hintText: 'Eventyze',
+                    controller: controller.bioController,
+                    hintText: 'Tell us about yourself (optional)',
                     maxLines: 9,
-                    maxLength: _maxBioLength,
+                    maxLength: 500,
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   ValueListenableBuilder(
-                    valueListenable: _bioController,
+                    valueListenable: controller.bioController,
                     builder: (context, value, child) {
                       return Align(
                         alignment: Alignment.bottomLeft,
                         child: Text(
-                          '${value.text.length}/$_maxBioLength',
+                          '${value.text.length}/500',
                           style: theme.textTheme.bodySmall!.copyWith(
-                            color: Color(0xFF797979),
+                            color: const Color(0xFF797979),
                           ),
                         ),
                       );
                     },
                   ),
-                  const SizedBox(height: 25),
+                  const SizedBox(height: 10),
                   CustomButton(
                     text: 'Next',
                     onTap: () {
-                      NavigationHelper.goToNavigatorScreen(
-                        context,
-                        PreferenceSelectionScreen(),
-                      );
+                      if (!controller.isUpdating.value) {
+                        AppLoadingDialog.show(message: 'Saving profile...');
+                        controller.saveProfileAndContinue();
+                      }
                     },
                   ),
                   const SizedBox(height: 40),
