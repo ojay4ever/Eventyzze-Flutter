@@ -1,11 +1,16 @@
 import 'package:eventyzze/config/app_theme.dart';
+import 'package:eventyzze/constants/enums.dart';
 import 'package:eventyzze/customWidgets/app_loading_dialog.dart';
 import 'package:eventyzze/customWidgets/custom_button.dart';
 import 'package:eventyzze/customWidgets/custom_text_field.dart';
 import 'package:eventyzze/utils/custom_snack_bar.dart';
 import 'package:eventyzze/views/eventScreens/create_event_controller.dart';
+import 'package:eventyzze/views/homeScreens/home_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
+import '../../helper/navigation_helper.dart';
+import 'event_confirmation_screen.dart';
 
 class CreateEventScreen extends StatefulWidget {
   const CreateEventScreen({super.key});
@@ -17,7 +22,6 @@ class CreateEventScreen extends StatefulWidget {
 class _CreateEventScreenState extends State<CreateEventScreen> {
   final CreateEventController _controller = Get.put(CreateEventController());
 
-  // Validation errors
   String _titleError = '';
   String _descriptionError = '';
   String _dateError = '';
@@ -27,13 +31,10 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   @override
   void initState() {
     super.initState();
-    // Set default date (current date)
     final now = DateTime.now();
     _controller.dateController.text =
         "${now.day.toString().padLeft(2, '0')}-${now.month.toString().padLeft(2, '0')}-${now.year}";
     _controller.selectedDate.value = now.toString().split(' ')[0];
-
-    // Set default time (current time)
     final currentTime = TimeOfDay.now();
     _controller.timeController.text = _formatTime(currentTime);
     _controller.selectedTime.value =
@@ -83,8 +84,6 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       }
     });
   }
-
-  // Beautiful Date Picker Bottom Sheet
   Future<void> _selectDate() async {
     DateTime initialDate = DateTime.now();
     if (_controller.dateController.text.isNotEmpty) {
@@ -117,9 +116,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
             ),
           ),
           child: Column(
-            children: [
-              // Header
-              Container(
+            children: [Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -182,7 +179,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                   ),
                 ),
               ),
-              // Confirm Button
+
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -223,13 +220,10 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       },
     );
   }
-
-  // Time Picker with Clock Interface
   Future<void> _selectTime() async {
     TimeOfDay initialTime = TimeOfDay.now();
     if (_controller.timeController.text.isNotEmpty) {
       try {
-        // Try to parse existing time from controller text
         final timeText = _controller.timeController.text.toLowerCase();
         final isAm = timeText.contains('am');
         final isPm = timeText.contains('pm');
@@ -238,8 +232,6 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         if (parts.length == 2) {
           int hour = int.parse(parts[0]);
           final minute = int.parse(parts[1]);
-
-          // Convert to 24-hour format
           if (isPm && hour != 12) {
             hour += 12;
           } else if (isAm && hour == 12) {
@@ -305,7 +297,6 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     }
   }
 
-  // Duration Picker Bottom Sheet
   Future<void> _selectDuration() async {
     final List<Map<String, String>> durations = [
       {'value': '30mins', 'display': '30 minutes'},
@@ -332,7 +323,6 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
           ),
           child: Column(
             children: [
-              // Header
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -407,12 +397,10 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     );
   }
 
-  // File Picker
   Future<void> _pickAdFile() async {
     await _controller.pickAdFile();
   }
 
-  // Event Creation
   Future<void> _createEvent() async {
     _validateFields();
 
@@ -428,21 +416,22 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     try {
       final createdEvent = await _controller.createEvent();
 
-      // Hide dialog before showing success message and navigating
       AppLoadingDialog.hide();
-
-      // Check if event was created successfully
       if (createdEvent != null && mounted) {
         CustomSnackBar.success(
           title: 'Success',
           message: 'Event created successfully!',
         );
-        // Small delay to let user see the success message
-        Future.delayed(const Duration(milliseconds: 800), () {
-          if (mounted) {
-            Get.back();
-          }
-        });
+
+        final homeController = Get.isRegistered<HomeController>()
+            ? Get.find<HomeController>()
+            : null;
+        homeController?.fetchTrendingEvents();
+
+        NavigationHelper.goToNavigatorScreen(
+          context,
+          const EventConfirmationScreen(),
+        );
       }
     } catch (e) {
       AppLoadingDialog.hide();
@@ -478,474 +467,422 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Get.back(),
-        ),
-        title: const Text(
-          'Create Event',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-            color: Colors.black,
-          ),
-        ),
-        centerTitle: false,
-      ),
       body: Obx(
         () => _controller.isLoading.value
             ? const Center(child: CircularProgressIndicator())
-            : SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 16,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Event Title
-                    _buildSectionTitle('Event Title'),
-                    const SizedBox(height: 8),
-                    Container(
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[50],
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.grey[300]!),
+            : SafeArea(
+              child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 10,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Create Event',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.black,
+                        ),
                       ),
-                      child: TextField(
-                        controller: _controller.titleController,
-                        style: const TextStyle(fontSize: 15),
-                        decoration: InputDecoration(
-                          hintText: 'Event Title *',
-                          hintStyle: TextStyle(
-                            color: Colors.grey[400],
-                            fontSize: 15,
-                          ),
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 14,
+                      SizedBox(height: 2.h,),
+                      _buildSectionTitle('Event Title'),
+                      const SizedBox(height: 8),
+                      Container(
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[50],
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey[300]!),
+                        ),
+                        child: TextField(
+                          controller: _controller.titleController,
+                          style: const TextStyle(fontSize: 15),
+                          decoration: InputDecoration(
+                            hintText: 'Event Title *',
+                            hintStyle: TextStyle(
+                              color: Colors.grey[400],
+                              fontSize: 15,
+                            ),
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 14,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    if (_titleError.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4, left: 8),
-                        child: Text(
-                          _titleError,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.red,
+                      if (_titleError.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4, left: 8),
+                          child: Text(
+                            _titleError,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.red,
+                            ),
+                          ),
+                        ),
+                      const SizedBox(height: 20),
+                      _buildSectionTitle('Event Description'),
+                      const SizedBox(height: 8),
+                      Container(
+                        height: 140,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[50],
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey[300]!),
+                        ),
+                        child: TextField(
+                          controller: _controller.descriptionController,
+                          maxLines: 6,
+                          style: const TextStyle(fontSize: 15),
+                          decoration: InputDecoration(
+                            hintText: 'Description *',
+                            hintStyle: TextStyle(
+                              color: Colors.grey[400],
+                              fontSize: 15,
+                            ),
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 14,
+                            ),
                           ),
                         ),
                       ),
-                    const SizedBox(height: 20),
-
-                    // Event Description
-                    _buildSectionTitle('Event Description'),
-                    const SizedBox(height: 8),
-                    Container(
-                      height: 140,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[50],
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.grey[300]!),
-                      ),
-                      child: TextField(
-                        controller: _controller.descriptionController,
-                        maxLines: 6,
-                        style: const TextStyle(fontSize: 15),
-                        decoration: InputDecoration(
-                          hintText: 'Description *',
-                          hintStyle: TextStyle(
-                            color: Colors.grey[400],
-                            fontSize: 15,
-                          ),
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 14,
+                      if (_descriptionError.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4, left: 8),
+                          child: Text(
+                            _descriptionError,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.red,
+                            ),
                           ),
                         ),
-                      ),
-                    ),
-                    if (_descriptionError.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4, left: 8),
-                        child: Text(
-                          _descriptionError,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.red,
-                          ),
-                        ),
-                      ),
-                    const SizedBox(height: 20),
-
-                    // Date and Upload Ad in Row
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildSectionTitle('Date'),
-                              const SizedBox(height: 8),
-                              GestureDetector(
-                                onTap: _selectDate,
-                                child: Container(
-                                  height: 50,
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey[50],
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color: Colors.grey[300]!,
+                      const SizedBox(height: 20),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildSectionTitle('Date'),
+                                const SizedBox(height: 8),
+                                GestureDetector(
+                                  onTap: _selectDate,
+                                  child: Container(
+                                    height: 50,
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey[50],
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: Colors.grey[300]!,
+                                      ),
                                     ),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 16,
-                                          ),
-                                          child: Text(
-                                            _controller
-                                                    .dateController
-                                                    .text
-                                                    .isEmpty
-                                                ? 'Select Date *'
-                                                : _controller
-                                                      .dateController
-                                                      .text,
-                                            style: TextStyle(
-                                              color:
-                                                  _controller
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 16,
+                                            ),
+                                            child: Text(
+                                              _controller
                                                       .dateController
                                                       .text
                                                       .isEmpty
-                                                  ? Colors.grey[400]
-                                                  : Colors.black87,
-                                              fontSize: 15,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.only(
-                                          right: 12,
-                                        ),
-                                        child: Icon(
-                                          Icons.keyboard_arrow_down,
-                                          color: Colors.grey[600],
-                                          size: 20,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              if (_dateError.isNotEmpty)
-                                Padding(
-                                  padding: const EdgeInsets.only(
-                                    top: 4,
-                                    left: 8,
-                                  ),
-                                  child: Text(
-                                    _dateError,
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.red,
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildSectionTitle('Upload Ad.'),
-                              const SizedBox(height: 8),
-                              GestureDetector(
-                                onTap: _pickAdFile,
-                                child: Container(
-                                  height: 50,
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey[50],
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color: Colors.grey[300]!,
-                                    ),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 16,
-                                          ),
-                                          child: Obx(
-                                            () => Text(
-                                              _controller
-                                                          .selectedAdFile
-                                                          .value !=
-                                                      null
-                                                  ? _controller
-                                                        .selectedAdFile
-                                                        .value!
-                                                        .path
-                                                        .split('/')
-                                                        .last
-                                                  : 'Select File (Optional)',
+                                                  ? 'Select Date *'
+                                                  : _controller
+                                                        .dateController
+                                                        .text,
                                               style: TextStyle(
                                                 color:
                                                     _controller
+                                                        .dateController
+                                                        .text
+                                                        .isEmpty
+                                                    ? Colors.grey[400]
+                                                    : Colors.black87,
+                                                fontSize: 15,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                            right: 12,
+                                          ),
+                                          child: Icon(
+                                            Icons.keyboard_arrow_down,
+                                            color: Colors.grey[600],
+                                            size: 20,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                if (_dateError.isNotEmpty)
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                      top: 4,
+                                      left: 8,
+                                    ),
+                                    child: Text(
+                                      _dateError,
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.red,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildSectionTitle('Upload Ad.'),
+                                const SizedBox(height: 8),
+                                GestureDetector(
+                                  onTap: _pickAdFile,
+                                  child: Container(
+                                    height: 50,
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey[50],
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: Colors.grey[300]!,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 16,
+                                            ),
+                                            child: Obx(
+                                              () => Text(
+                                                _controller
                                                             .selectedAdFile
                                                             .value !=
                                                         null
-                                                    ? Colors.black87
-                                                    : Colors.grey[400],
+                                                    ? _controller
+                                                          .selectedAdFile
+                                                          .value!
+                                                          .path
+                                                          .split('/')
+                                                          .last
+                                                    : 'Select File (Optional)',
+                                                style: TextStyle(
+                                                  color:
+                                                      _controller
+                                                              .selectedAdFile
+                                                              .value !=
+                                                          null
+                                                      ? Colors.black87
+                                                      : Colors.grey[400],
+                                                  fontSize: 15,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildSectionTitle('Duration'),
+                                const SizedBox(height: 8),
+                                GestureDetector(
+                                  onTap: _selectDuration,
+                                  child: Container(
+                                    height: 50,
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey[50],
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: Colors.grey[300]!,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 16,
+                                            ),
+                                            child: Text(
+                                              _controller
+                                                      .durationController
+                                                      .text
+                                                      .isEmpty
+                                                  ? 'Select Duration *'
+                                                  : _controller
+                                                        .durationController
+                                                        .text,
+                                              style: TextStyle(
+                                                color:
+                                                    _controller
+                                                        .durationController
+                                                        .text
+                                                        .isEmpty
+                                                    ? Colors.grey[400]
+                                                    : Colors.black87,
                                                 fontSize: 15,
                                               ),
-                                              overflow: TextOverflow.ellipsis,
                                             ),
                                           ),
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Duration and Time in Row
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildSectionTitle('Duration'),
-                              const SizedBox(height: 8),
-                              GestureDetector(
-                                onTap: _selectDuration,
-                                child: Container(
-                                  height: 50,
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey[50],
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color: Colors.grey[300]!,
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                            right: 12,
+                                          ),
+                                          child: Icon(
+                                            Icons.keyboard_arrow_down,
+                                            color: Colors.grey[600],
+                                            size: 20,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 16,
-                                          ),
-                                          child: Text(
-                                            _controller
-                                                    .durationController
-                                                    .text
-                                                    .isEmpty
-                                                ? 'Select Duration *'
-                                                : _controller
-                                                      .durationController
-                                                      .text,
-                                            style: TextStyle(
-                                              color:
-                                                  _controller
-                                                      .durationController
-                                                      .text
-                                                      .isEmpty
-                                                  ? Colors.grey[400]
-                                                  : Colors.black87,
-                                              fontSize: 15,
+                                ),
+                                if (_durationError.isNotEmpty)
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                      top: 4,
+                                      left: 8,
+                                    ),
+                                    child: Text(
+                                      _durationError,
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.red,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildSectionTitle('Time'),
+                                const SizedBox(height: 8),
+                                GestureDetector(
+                                  onTap: _selectTime,
+                                  child: Container(
+                                    height: 50,
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey[50],
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: Colors.grey[300]!,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 16,
                                             ),
-                                          ),
-                                        ),
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.only(
-                                          right: 12,
-                                        ),
-                                        child: Icon(
-                                          Icons.keyboard_arrow_down,
-                                          color: Colors.grey[600],
-                                          size: 20,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              if (_durationError.isNotEmpty)
-                                Padding(
-                                  padding: const EdgeInsets.only(
-                                    top: 4,
-                                    left: 8,
-                                  ),
-                                  child: Text(
-                                    _durationError,
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.red,
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildSectionTitle('Time'),
-                              const SizedBox(height: 8),
-                              GestureDetector(
-                                onTap: _selectTime,
-                                child: Container(
-                                  height: 50,
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey[50],
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color: Colors.grey[300]!,
-                                    ),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 16,
-                                          ),
-                                          child: Text(
-                                            _controller
-                                                    .timeController
-                                                    .text
-                                                    .isEmpty
-                                                ? 'Select Time *'
-                                                : _controller
-                                                      .timeController
-                                                      .text,
-                                            style: TextStyle(
-                                              color:
-                                                  _controller
+                                            child: Text(
+                                              _controller
                                                       .timeController
                                                       .text
                                                       .isEmpty
-                                                  ? Colors.grey[400]
-                                                  : Colors.black87,
-                                              fontSize: 15,
+                                                  ? 'Select Time *'
+                                                  : _controller
+                                                        .timeController
+                                                        .text,
+                                              style: TextStyle(
+                                                color:
+                                                    _controller
+                                                        .timeController
+                                                        .text
+                                                        .isEmpty
+                                                    ? Colors.grey[400]
+                                                    : Colors.black87,
+                                                fontSize: 15,
+                                              ),
                                             ),
                                           ),
                                         ),
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.only(
-                                          right: 12,
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                            right: 12,
+                                          ),
+                                          child: Icon(
+                                            Icons.keyboard_arrow_down,
+                                            color: Colors.grey[600],
+                                            size: 20,
+                                          ),
                                         ),
-                                        child: Icon(
-                                          Icons.keyboard_arrow_down,
-                                          color: Colors.grey[600],
-                                          size: 20,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              if (_timeError.isNotEmpty)
-                                Padding(
-                                  padding: const EdgeInsets.only(
-                                    top: 4,
-                                    left: 8,
-                                  ),
-                                  child: Text(
-                                    _timeError,
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.red,
+                                      ],
                                     ),
                                   ),
                                 ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 40),
-                    Column(
-                      children: [
-                        SizedBox(
-                          width: double.infinity,
-                          height: 52,
-                          child: OutlinedButton(
-                            onPressed: _previewEvent,
-                            style: OutlinedButton.styleFrom(
-                              side: BorderSide(
-                                color: AppTheme.kPrimaryColor,
-                                width: 2,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(30),
-                              ),
-                            ),
-                            child: Text(
-                              'Preview',
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
+                                if (_timeError.isNotEmpty)
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                      top: 4,
+                                      left: 8,
+                                    ),
+                                    child: Text(
+                                      _timeError,
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.red,
+                                      ),
+                                    ),
+                                  ),
+                              ],
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 12),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 52,
-                          child: ElevatedButton(
-                            onPressed: _createEvent,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppTheme.kPrimaryColor,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(30),
-                              ),
-                            ),
-                            child: const Text(
-                              'Continue',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 40),
+                      CustomButton(text: 'Preview',
+                      borderColor: AppTheme.kPrimaryColor,
+                      onTap: _previewEvent,
+                        backgroundColor: Colors.white,
+                      ),
+              
+                          const SizedBox(height: 12),
+                          CustomButton(text: 'Continue',
+                          onTap: _createEvent,
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                  ],
+              
+                      const SizedBox(height: 24),
+                    ],
+                  ),
                 ),
-              ),
+            ),
       ),
     );
   }

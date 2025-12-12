@@ -60,7 +60,7 @@ class _CustomCategoriesState extends State<CustomCategories> {
               child: Text(
                 label,
                 style: TextStyle(
-                  fontFamily: AppFonts.inter,
+                  fontFamily: AppFonts.lato,
                   fontWeight: FontWeight.w500,
                   fontSize: 14,
                   color: isSelected ? Colors.black : Colors.black87,

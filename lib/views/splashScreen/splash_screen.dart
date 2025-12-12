@@ -14,7 +14,6 @@ import '../../helper/navigation_helper.dart';
 import '../../repositories/profileRepository/profile_repository.dart';
 import '../../services/socket_service.dart';
 
-
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -22,17 +21,45 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
+
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _opacityAnimation;
+
   final ProfileRepository _profileRepo = getIt<ProfileRepository>();
 
   @override
   void initState() {
     super.initState();
-    Timer(const Duration(seconds: 2), _checkIfLoggedIn);
+
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    );
+
+    _scaleAnimation = Tween<double>(
+      begin: 0.2,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOut,
+    ));
+
+    _opacityAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0.0, 0.6, curve: Curves.easeIn),
+    ));
+
+    _controller.forward();
+
+    Timer(const Duration(seconds: 4), _checkIfLoggedIn);
   }
-
   Future<void> _checkIfLoggedIn() async {
-
     final prefs = await SharedPreferences.getInstance();
     final accepted = prefs.getBool('tosAccepted_v1') ?? false;
 
@@ -48,21 +75,19 @@ class _SplashScreenState extends State<SplashScreen> {
         return;
       }
     }
-
     final user = FirebaseAuth.instance.currentUser;
     final SharedPrefsHelper sharedPrefsHelper = SharedPrefsHelper(
       sharedPreferences: prefs,
     );
     String dbId = await sharedPrefsHelper.getDatabaseId();
+
     if (user != null && dbId.isNotEmpty) {
       try {
-
         final profile = await _profileRepo.getProfile(dbId);
         if (profile != null) {
-
           await sharedPrefsHelper.setDatabaseId(profile.dbId);
-
           SocketService().connect(profile.dbId);
+
           if (!mounted) return;
           NavigationHelper.goToNavigatorScreen(
             Get.context!,
@@ -101,15 +126,31 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        height: double.infinity,
-        width: double.infinity,
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage(AppImages.airPhone),
-            fit: BoxFit.cover,
+      backgroundColor: Colors.white,
+      body: Center(
+        child: FadeTransition(
+          opacity: _opacityAnimation,
+          child: ScaleTransition(
+            scale: _scaleAnimation,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Image.asset(
+                  AppImages.eventyzzeLogo,
+                  width: 320,
+                  fit: BoxFit.contain,
+                ),
+                const SizedBox(height: 15),
+              ],
+            ),
           ),
         ),
       ),

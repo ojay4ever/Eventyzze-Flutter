@@ -5,6 +5,8 @@ import 'package:eventyzze/repositories/eventRepository/event_repository.dart';
 import 'package:eventyzze/repositories/eventRepository/event_repository_impl.dart';
 import 'package:eventyzze/repositories/profileRepository/profile_repository.dart';
 import 'package:eventyzze/repositories/profileRepository/profile_repository_impl.dart';
+import 'package:eventyzze/repositories/streamRepository/stream_repository.dart';
+import 'package:eventyzze/repositories/streamRepository/stream_repository_impl.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:injectable/injectable.dart';
@@ -28,4 +30,5 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton<ProfileRepository>(() => ProfileRepositoryImpl());
   getIt.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl());
   getIt.registerLazySingleton<EventRepository>(() => EventRepositoryImpl());
+  getIt.registerLazySingleton<StreamRepository>(() => StreamRepositoryImpl());
 }

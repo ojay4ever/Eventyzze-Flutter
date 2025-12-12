@@ -10,150 +10,173 @@ class WelcomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final width = size.width;
+    final height = size.height;
+    final double sectionHeight = height * 0.55;
+    final double imgWidth = width * 0.35;
+    final double imgHeight = sectionHeight * 0.40;
+
     return Scaffold(
       body: Container(
         width: double.infinity,
-        height: MediaQuery.of(context).size.height,
+        height: height,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFFF2F2F2), Color(0xFFA0A0A0)],
+            colors: [
+              Color(0xFFFFFFFF),
+              Color(0xFFE0E0E0),
+              Color(0xFFD8BFD8),
+            ],
+            stops: [0.0, 0.6, 1.0],
           ),
         ),
         child: SafeArea(
-          child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minHeight: MediaQuery.of(context).size.height,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 30.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          child: Column(
+            children: [
+              SizedBox(height: height * 0.02),
+              SizedBox(
+                height: sectionHeight,
+                width: width,
+                child: Stack(
                   children: [
-                    const SizedBox(height: 30),
-                    _buildStack(context),
-                    const SizedBox(height: 80),
-                    _buildDottedArc(context),
-                    const SizedBox(height: 40),
+                    Positioned(
+                      left: width * 0.08,
+                      top: sectionHeight * 0.08,
+                      child: Text(
+                        "Eventyze",
+                        style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                          fontSize: width * 0.08,
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      right: width * 0.05,
+                      top: sectionHeight * 0.04,
+                      child: _responsiveImage(
+                          AppImages.first, imgWidth, imgHeight),
+                    ),
+
+                    Positioned(
+                      left: width * 0.05,
+                      top: sectionHeight * 0.33,
+                      child: _responsiveImage(
+                          AppImages.night, imgWidth, imgHeight),
+                    ),
+                    Positioned(
+                      right: width * 0.05,
+                      top: sectionHeight * 0.62,
+                      child: _responsiveImage(
+                          AppImages.girl, imgWidth, imgHeight),
+                    ),
                   ],
                 ),
               ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "Experience a world\nof Entertainment!",
+                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        fontFamily: AppFonts.sans,
+                        color: Colors.black,
+                        fontSize: width * 0.07,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: height * 0.015),
+                    Text(
+                      "Stream and replay live\nevents on eventyze",
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: Colors.grey[800],
+                        fontFamily: AppFonts.sans,
+                        fontWeight: FontWeight.w400,
+                        fontSize: width * 0.04,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const Spacer(),
 
-  Widget _buildStack(BuildContext context) {
-    final theme = Theme.of(context);
-    return SizedBox(
-      height: 420,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "Eventyze",
-                style: theme.textTheme.headlineLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                  fontSize: 34,
+                    GestureDetector(
+                      onTap: () {
+                        NavigationHelper.goToNavigatorScreen(
+                            context, const SignUpScreen());
+                      },
+                      child: Container(
+                        width: width * 0.5,
+                        height: 55,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(30),
+                          border: const GradientBoxBorder(
+                            gradient: LinearGradient(
+                              colors: [
+                                Color(0xFF082EB4),
+                                Color(0xFF51468F),
+                                Color(0xFFFF8038),
+                              ],
+                            ),
+                            width: 3,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, 5),
+                            )
+                          ],
+                        ),
+                        child: Center(
+                          child: Text(
+                            "Sign up",
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              color: Colors.black,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 18,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: height * 0.05),
+                  ],
                 ),
               ),
             ],
           ),
-          Positioned(top: 0, right: 0, child: _roundedImage(AppImages.first)),
-          Positioned(top: 130, left: 0, child: _roundedImage(AppImages.night)),
-          Positioned(top: 250, right: 0, child: _roundedImage(AppImages.girl)),
+        ),
+      ),
+    );
+  }
+
+  Widget _responsiveImage(String path, double w, double h) {
+    return Container(
+      width: w,
+      height: h,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 10,
+            spreadRadius: 2,
+            offset: const Offset(0, 5),
+          ),
         ],
       ),
-    );
-  }
-
-  Widget _roundedImage(String imagePath) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(18),
-      child: Image.asset(
-        imagePath,
-        width: 150,
-        height: 200,
-        fit: BoxFit.cover,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Image.asset(
+          path,
+          fit: BoxFit.cover,
+        ),
       ),
-    );
-  }
-
-  Widget _buildDottedArc(BuildContext context) {
-    final theme = Theme.of(context);
-    return Column(
-      children: [
-        Center(
-          child: Text(
-            "Experience a world\nof Entertainment!",
-            style: theme.textTheme.headlineMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              fontFamily: AppFonts.sans,
-              color: Colors.black,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ),
-        const SizedBox(height: 10),
-        Center(
-          child: Text(
-            "Stream and replay live\nevents on eventyze",
-            style: theme.textTheme.bodyLarge?.copyWith(
-              color: Colors.black,
-              fontFamily: AppFonts.sans,
-              fontWeight: FontWeight.w400,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ),
-        const SizedBox(height: 50),
-        Center(
-          child: GestureDetector(
-            onTap: (){
-              NavigationHelper.goToNavigatorScreen(context, const SignUpScreen());
-            },
-            child: Container(
-              width: 160,
-              height: 48,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(30),
-                border: GradientBoxBorder(
-                  gradient: const LinearGradient(
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                    colors: [
-                      Color(0xFF082EB4),
-                      Color(0xFF51468F),
-                      Color(0xFFFF8038),
-                    ],
-                  ),
-                  width: 3,
-                ),
-              ),
-              child: Center(
-                child: Text(
-                  "Sign up",
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    color: Colors.black,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

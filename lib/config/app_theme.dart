@@ -9,7 +9,7 @@ class AppTheme {
   static const Color followButtonColor = Color(0xFF50D6EF);
   static const Color kPrimaryColor = Color(0xFFFF8038);
   static const Color kButtonColor = Color(0xFFFF8038);
-  static const Color greenColor = Color(0xFF85D0CA);
+  static const Color greenColor = Colors.green;
   static const Color unSelectedColor = Color(0xFF2CBCB1);
   static const Color greyColor = Color(0xFF909096);
   static const Color greyColor2 = Color(0xFF636373);

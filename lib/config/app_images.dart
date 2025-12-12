@@ -6,7 +6,7 @@ class AppImages {
   static const String googleP = "assets/images/google.jpg";
   static const String appleP = "assets/images/apple.jpg";
   static const String signup = 'assets/images/signup.png';
-  static const String men = "assets/images/men.png";
+  static const String man = "assets/images/man.png";
   static const String singGirl = "assets/images/singGirl.png";
   static const String firstP = "assets/images/first.png";
   static const String second = "assets/images/second.png";
@@ -21,6 +21,9 @@ class AppImages {
   static const String goldenMen = "assets/images/goldenMen.png";
   static const String mic = "assets/images/mic.png";
   static const String pic = "assets/images/pic.png";
+  static const String man1 = "assets/images/man1.jpg";
+  static const String eventyzzeLogo = "assets/images/logo.png";
+  static const String confirmation = "assets/images/confirmation.png";
 
 
 
@@ -32,7 +35,12 @@ class AppImages {
   static const String search = 'assets/svgs/search.svg';
   static const String home = 'assets/svgs/Home.svg';
   static const String heart = 'assets/svgs/Heart.svg';
+  static const String cash_Out = 'assets/svgs/cash_Out.svg';
+  static const String payStack = 'assets/svgs/payStack.svg';
+  static const String wallet = 'assets/svgs/wallet.svg';
   static const String profile = 'assets/svgs/profile.svg';
   static const String notification = 'assets/svgs/notification.svg';
+  static const String sendIcon = 'assets/svgs/send.svg';
+  static const String giftIcon = 'assets/svgs/gift.svg';
 
 }

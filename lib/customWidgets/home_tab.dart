@@ -1,7 +1,7 @@
+import 'package:eventyzze/views/eventScreens/create_event_screen.dart';
 import 'package:eventyzze/views/favoritesScreens/favorites_screen.dart';
 import 'package:eventyzze/views/homeScreens/home_page_viewer.dart';
 import 'package:eventyzze/views/profileScreens/profile_page.dart';
-import 'package:eventyzze/views/eventScreens/create_event_screen.dart';
 import 'package:flutter/material.dart';
 
 import '../views/NotificationScreens/notifications_screen.dart';
@@ -18,14 +18,15 @@ class HomeTab extends StatefulWidget {
 class _HomeTabState extends State<HomeTab> {
   late int _selectedIndex;
   late final List<Widget> _screens;
+
   @override
   void initState() {
     super.initState();
     _selectedIndex = widget.initialIndex;
-
     _screens = [
       HomePageViewer(),
       const FavoritesScreen(),
+      const CreateEventScreen(),
       const NotificationsScreen(),
       ProfilePage(),
     ];
@@ -36,18 +37,16 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   void _onCenterButtonTapped() {
-    Navigator.of(context, rootNavigator: false).push(
-      MaterialPageRoute(
-        builder: (context) => const CreateEventScreen(),
-        fullscreenDialog: false,
-      ),
-    );
+    setState(() => _selectedIndex = 2);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(index: _selectedIndex, children: _screens),
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: _screens,
+      ),
       bottomNavigationBar: CustomBottomNavBar(
         currentIndex: _selectedIndex,
         onTap: _onNavItemTapped,

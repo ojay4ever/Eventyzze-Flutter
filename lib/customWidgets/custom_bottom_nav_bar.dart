@@ -1,9 +1,8 @@
 import 'package:eventyzze/config/app_font.dart';
+import 'package:eventyzze/config/app_theme.dart';
+import 'package:eventyzze/config/app_images.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-
-import '../config/app_images.dart';
-import '../config/app_theme.dart';
 
 class CustomBottomNavBar extends StatelessWidget {
   final int currentIndex;
@@ -29,13 +28,8 @@ class CustomBottomNavBar extends StatelessWidget {
         builder: (context, constraints) {
           final slotWidth = constraints.maxWidth / 5;
           const double indicatorWidth = 50;
-
-          final visualIndex = currentIndex >= 2
-              ? currentIndex + 1
-              : currentIndex;
-
           final double indicatorLeft =
-              visualIndex * slotWidth + (slotWidth - indicatorWidth) / 2;
+              currentIndex * slotWidth + (slotWidth - indicatorWidth) / 2;
 
           return Stack(
             children: [
@@ -56,16 +50,20 @@ class CustomBottomNavBar extends StatelessWidget {
                     Expanded(
                       child: _buildNavItem(AppImages.heart, "Favourite", 1),
                     ),
-                    Expanded(child: _buildCenterButton()),
+                    Expanded(
+                      child: _buildCenterButton(
+                        isSelected: currentIndex == 2,
+                      ),
+                    ),
                     Expanded(
                       child: _buildNavItem(
                         AppImages.notification,
                         "Notifications",
-                        2,
+                        3,
                       ),
                     ),
                     Expanded(
-                      child: _buildNavItem(AppImages.profile, "Profile", 3),
+                      child: _buildNavItem(AppImages.profile, "Profile", 4),
                     ),
                   ],
                 ),
@@ -130,21 +128,32 @@ class CustomBottomNavBar extends StatelessWidget {
     );
   }
 
-  Widget _buildCenterButton() {
+  Widget _buildCenterButton({required bool isSelected}) {
     return Transform.translate(
       offset: const Offset(0, -6),
       child: GestureDetector(
-        onTap: onCenterButtonTap,
+        onTap: onCenterButtonTap ?? () => onTap(2),
         child: Container(
           width: 33.06,
           height: 33.45,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(9),
-            border: Border.all(color: const Color(0xFF808191), width: 1.2),
-            color: Colors.transparent,
+            color: isSelected ? selectedColor : Colors.white,
+            border: Border.all(
+              color: isSelected
+                  ? Colors.transparent
+                  : const Color(0xFF808191),
+              width: 1.2,
+            ),
           ),
           alignment: Alignment.center,
-          child: const Icon(Icons.add, size: 20, color: Color(0xFF808191)),
+          child: Icon(
+            Icons.add,
+            size: 20,
+            color: isSelected
+                ? Colors.black
+                : const Color(0xFF808191),
+          ),
         ),
       ),
     );

@@ -33,11 +33,11 @@ class SignUpScreen extends StatelessWidget {
                     fontSize: 24,
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 6),
                 Text(
                   'Create an account with Eventyze and explore a world of endless entertainment',
                   style: TextStyle(
-                    fontWeight: FontWeight.w400,
+                    fontWeight: FontWeight.w100,
                     fontFamily: AppFonts.inter,
                     fontSize: 16,
                     color: const Color(0xFF000000).withAlpha(128),

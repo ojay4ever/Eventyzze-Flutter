@@ -56,14 +56,17 @@ class AppLoadingDialog {
   }
 
   static void hide() {
-    if (_isShowing && (Get.isDialogOpen ?? false)) {
-      try {
-        Get.back();
-        _isShowing = false;
-      } catch (e) {
-        // Dialog already closed or disposed
-        _isShowing = false;
+    if (!_isShowing) return;
+    
+    try {
+      // Check if Get context is available and if dialog is actually open
+      if (Get.isDialogOpen == true) {
+        Get.back(closeOverlays: false);
       }
+    } catch (e) {
+      // Silently catch any errors - dialog might already be closed
+    } finally {
+      _isShowing = false;
     }
   }
 }
