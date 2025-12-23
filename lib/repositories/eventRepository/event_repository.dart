@@ -5,4 +5,5 @@ abstract class EventRepository {
   Future<EventModel?> createEvent(FormData data);
   Future<List<EventModel>> getEvents();
   Future<EventModel?> getEventById(String eventId);
+  Future<bool> purchaseTicket(String eventId);
 }

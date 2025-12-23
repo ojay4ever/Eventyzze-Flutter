@@ -9,6 +9,7 @@ abstract class ProfileRepository {
   Future<UserModel?> updateProfileData(Map<String, dynamic> data);
   Future<UserModel?> uploadProfileImage(String imageUrl);
   Future<UserModel?> getProfile(String dbId);
+  Future<UserModel?> getCurrentUser();
   Future<UserModel?> getOtherUserProfile(String dbId);
   Future<void> updateFcmToken(Map<String, dynamic> data);
 

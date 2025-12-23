@@ -37,6 +37,15 @@ class AuthController extends GetxController {
   final RxString nameError = ''.obs;
   final RxBool isLoading = false.obs;
 
+  void clearFields() {
+    emailController.clear();
+    passwordController.clear();
+    nameController.clear();
+    emailError.value = '';
+    passwordError.value = '';
+    nameError.value = '';
+  }
+
   @override
   void onClose() {
     emailController.dispose();
@@ -89,19 +98,50 @@ class AuthController extends GetxController {
         return;
       }
 
+      // Save userId to SharedPreferences
+      await _sharedPrefsHelper.setUserId(userCredential.user!.uid);
+
+      // Fetch user profile to get database ID
+      final fetchedUser = await _profileRepository.getCurrentUser();
+
+      if (fetchedUser == null || fetchedUser.dbId.isEmpty) {
+        CustomSnackBar.error(
+          title: 'Error',
+          message: 'Failed to fetch user profile. Please try again.',
+        );
+        isLoading.value = false;
+        return;
+      }
+
+      // Save database ID to SharedPreferences
+      await _sharedPrefsHelper.setDatabaseId(fetchedUser.dbId);
+
+      // Update FCM token
+      final fcmToken = await FirebaseMessaging.instance.getToken();
+      if (fcmToken != null && fcmToken.isNotEmpty) {
+        Map<String, dynamic> req = {
+          'fcmToken': fcmToken,
+          'dbId': fetchedUser.dbId,
+        };
+        await _profileRepository.updateFcmToken(req);
+      }
+
+      // Connect to socket service
+      SocketService().connect(fetchedUser.dbId);
+
       CustomSnackBar.success(title: 'Success', message: 'Login successful!');
       NavigationHelper.goToNavigatorScreen(Get.context!, HomeTab(),finish: true);
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
-        CustomSnackBar.error(
-          title: 'Error',
-          message: 'No user found for that email.',
-        );
+      CustomSnackBar.error(
+        title: 'Error',
+        message: 'Email is incorrect.',
+      );
       } else if (e.code == 'wrong-password') {
-        CustomSnackBar.error(
-          title: 'Error',
-          message: 'Wrong password provided.',
-        );
+      CustomSnackBar.error(
+        title: 'Error',
+        message: 'Password is incorrect.',
+      );
       } else if (e.code == 'invalid-email') {
         CustomSnackBar.error(
           title: 'Error',
@@ -113,6 +153,11 @@ class AuthController extends GetxController {
           message: e.message ?? 'An unknown error occurred.',
         );
       }
+    } catch (e) {
+      CustomSnackBar.error(
+        title: 'Error',
+        message: 'Login failed: ${e.toString()}',
+      );
     } finally {
       isLoading.value = false;
     }
@@ -137,15 +182,18 @@ class AuthController extends GetxController {
     if (emailError.value.isNotEmpty ||
         passwordError.value.isNotEmpty ||
         nameError.value.isNotEmpty) {
+      AppLoadingDialog.hide();
       return;
     }
 
     if (!GetUtils.isEmail(emailController.text)) {
       emailError.value = 'Please enter a valid email.';
+      AppLoadingDialog.hide();
       return;
     }
     if (passwordController.text.length < 6) {
       passwordError.value = 'Password must be at least 6 characters.';
+      AppLoadingDialog.hide();
       return;
     }
 
@@ -191,21 +239,22 @@ class AuthController extends GetxController {
 
       AppLoadingDialog.hide();
 
-      // Navigate to Email Verification Screen
-      Get.offAll(() => const EmailVerificationScreen());
-
       CustomSnackBar.success(
         title: 'Success',
         message:
             'Account created! A verification email has been sent to your email.',
       );
+
+      // Navigate to Email Verification Screen after a brief delay to show snackbar
+      await Future.delayed(const Duration(milliseconds: 500));
+      Get.offAll(() => const EmailVerificationScreen());
     } on FirebaseAuthException catch (e) {
       AppLoadingDialog.hide();
       if (e.code == 'email-already-in-use') {
-        CustomSnackBar.error(
-          title: 'Error',
-          message: 'An account already exists with this email.',
-        );
+      CustomSnackBar.error(
+        title: 'Error',
+        message: 'This email is already registered. Please log in.',
+      );
       } else if (e.code == 'weak-password') {
         passwordError.value = 'Password is too weak.';
       } else {

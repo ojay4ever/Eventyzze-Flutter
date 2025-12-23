@@ -2,11 +2,11 @@ import 'package:eventyzze/config/app_theme.dart';
 import 'package:eventyzze/constants/enums.dart';
 import 'package:eventyzze/customWidgets/app_loading_dialog.dart';
 import 'package:eventyzze/customWidgets/custom_button.dart';
-import 'package:eventyzze/customWidgets/custom_text_field.dart';
 import 'package:eventyzze/utils/custom_snack_bar.dart';
 import 'package:eventyzze/views/eventScreens/create_event_controller.dart';
 import 'package:eventyzze/views/homeScreens/home_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 import '../../helper/navigation_helper.dart';
@@ -126,7 +126,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -158,8 +158,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                       onPrimary: Colors.white,
                       surface: Colors.white,
                       onSurface: Colors.black,
-                    ),
-                    dialogBackgroundColor: Colors.white,
+                    ), dialogTheme: DialogThemeData(backgroundColor: Colors.white),
                   ),
                   child: CalendarDatePicker(
                     initialDate: initialDate,
@@ -186,7 +185,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                   color: Colors.white,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: 8,
                       offset: const Offset(0, -2),
                     ),
@@ -257,15 +256,14 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
               onSurface: Colors.black,
               surface: Colors.white,
             ),
-            dialogBackgroundColor: Colors.white,
             timePickerTheme: TimePickerThemeData(
               backgroundColor: Colors.white,
-              hourMinuteColor: AppTheme.kPrimaryColor.withOpacity(0.1),
+              hourMinuteColor: AppTheme.kPrimaryColor.withValues(alpha: 0.1),
               hourMinuteTextColor: AppTheme.kPrimaryColor,
-              dayPeriodColor: AppTheme.kPrimaryColor.withOpacity(0.1),
+              dayPeriodColor: AppTheme.kPrimaryColor.withValues(alpha: 0.1),
               dayPeriodTextColor: AppTheme.kPrimaryColor,
               dialHandColor: AppTheme.kPrimaryColor,
-              dialBackgroundColor: AppTheme.kPrimaryColor.withOpacity(0.05),
+              dialBackgroundColor: AppTheme.kPrimaryColor.withValues(alpha: 0.05),
               dialTextColor: Colors.black,
               entryModeIconColor: AppTheme.kPrimaryColor,
               dayPeriodTextStyle: const TextStyle(
@@ -277,7 +275,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
               ),
-            ),
+            ), dialogTheme: DialogThemeData(backgroundColor: Colors.white),
           ),
           child: MediaQuery(
             data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: false),
@@ -333,7 +331,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -417,6 +415,10 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       final createdEvent = await _controller.createEvent();
 
       AppLoadingDialog.hide();
+
+      // Small delay to ensure dialog is fully closed before navigation
+      await Future.delayed(const Duration(milliseconds: 200));
+
       if (createdEvent != null && mounted) {
         CustomSnackBar.success(
           title: 'Success',
@@ -427,14 +429,18 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
             ? Get.find<HomeController>()
             : null;
         homeController?.fetchTrendingEvents();
-
-        NavigationHelper.goToNavigatorScreen(
-          context,
-          const EventConfirmationScreen(),
-        );
+        Future.delayed(const Duration(milliseconds: 150), () {
+          if (mounted) {
+            NavigationHelper.goToNavigatorScreen(
+              context,
+              EventConfirmationScreen(event: createdEvent),
+            );
+          }
+        });
       }
     } catch (e) {
       AppLoadingDialog.hide();
+      await Future.delayed(const Duration(milliseconds: 200));
       if (mounted) {
         CustomSnackBar.error(
           title: 'Error',
@@ -467,10 +473,8 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Obx(
-        () => _controller.isLoading.value
-            ? const Center(child: CircularProgressIndicator())
-            : SafeArea(
+      body:
+             SafeArea(
               child: SingleChildScrollView(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 20,
@@ -866,6 +870,41 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                           ),
                         ],
                       ),
+                      const SizedBox(height: 20),
+                      _buildSectionTitle('Event Price (Min. 20 Coins)'),
+                      const SizedBox(height: 8),
+                      Container(
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[50],
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey[300]!),
+                        ),
+                        child: TextField(
+                          controller: _controller.priceController,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
+                          style: const TextStyle(fontSize: 15),
+                          decoration: InputDecoration(
+                            hintText: 'Enter Price *',
+                            hintStyle: TextStyle(
+                              color: Colors.grey[400],
+                              fontSize: 15,
+                            ),
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 14,
+                            ),
+                            suffixIcon: Padding(
+                              padding: const EdgeInsets.all(12.0),
+                              child: Icon(Icons.monetization_on, color: AppTheme.kPrimaryColor, size: 20),
+                            ),
+                          ),
+                        ),
+                      ),
                       const SizedBox(height: 40),
                       CustomButton(text: 'Preview',
                       borderColor: AppTheme.kPrimaryColor,
@@ -883,7 +922,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                   ),
                 ),
             ),
-      ),
+
     );
   }
 

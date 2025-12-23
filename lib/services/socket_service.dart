@@ -1,16 +1,14 @@
-
+import 'package:eventyzze/constants/api_constants.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
-
 import '../../main.dart';
-import '../constants/api_constants.dart';
 
 class SocketService {
   void connect(String userId) {
     socket = IO.io(
-      ApiConstants.baseUrl,
+      ApiConstants.socketBaseUrl,
       IO.OptionBuilder()
           .setTransports(['websocket'])
-          .setAuth({'userid': userId})
+          .setAuth({'userId': userId}) // Note: Using userId instead of userid to match backend
           .enableReconnection()
           .build(),
     );
@@ -18,7 +16,7 @@ class SocketService {
     socket!.connect();
 
     socket!.onConnect((_) {
-      print(' Connected to Socket Server');
+      print('✅ Connected to Socket Server');
     });
 
     socket!.onDisconnect((_) {

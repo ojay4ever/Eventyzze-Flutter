@@ -8,8 +8,9 @@ import 'package:eventyzze/model/event_model.dart';
 import 'package:eventyzze/model/stream_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:eventyzze/views/streamScreen/streamController/stream_controller.dart';
+import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
-
 import '../../config/app_images.dart';
 
 class LiveStreamScreen extends StatefulWidget {
@@ -36,41 +37,25 @@ class _LiveStreamScreenState extends State<LiveStreamScreen> {
   String? _error;
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _commentScrollController = ScrollController();
-  final List<_LiveComment> _comments = <_LiveComment>[];
+  final StreamController _streamController = Get.find<StreamController>();
 
   @override
   void initState() {
     super.initState();
-    _seedInitialComments();
+    _streamController.initSockets();
+    _streamController.joinStreamRoom(widget.event.id, widget.isHost);
     unawaited(_initAgora());
   }
 
   @override
   void dispose() {
+    _streamController.leaveStreamRoom(widget.event.id);
     _messageController.dispose();
     _commentScrollController.dispose();
     _leaveChannel();
     super.dispose();
   }
 
-  void _seedInitialComments() {
-    _comments
-      ..clear()
-      ..addAll(const [
-        _LiveComment(
-          username: 'olamide',
-          message: 'Lorem ipsum dolor sit amet consectetur. Magna pulvinar felis.',
-        ),
-        _LiveComment(
-          username: 'streamer',
-          message: 'Welcome everyone! Tap the heart if you enjoy the show.',
-        ),
-        _LiveComment(
-          username: 'olamide',
-          message: 'Voice sounds amazing tonight 🔥',
-        ),
-      ]);
-  }
 
   Future<void> _initAgora() async {
     setState(() {
@@ -175,21 +160,8 @@ class _LiveStreamScreenState extends State<LiveStreamScreen> {
   void _handleSendMessage() {
     final text = _messageController.text.trim();
     if (text.isEmpty) return;
-    setState(() {
-      _comments.insert(
-        0,
-        _LiveComment(
-          username: widget.isHost ? 'You' : 'Guest',
-          message: text,
-        ),
-      );
-    });
+    _streamController.sendComment(widget.event.id, text);
     _messageController.clear();
-    _commentScrollController.animateTo(
-      0,
-      duration: const Duration(milliseconds: 250),
-      curve: Curves.easeOut,
-    );
   }
 
   @override
@@ -225,18 +197,81 @@ class _LiveStreamScreenState extends State<LiveStreamScreen> {
             Positioned(
               top: 5.0.h,
               left: 0.w,
-              child: _buildTopBanner(),
+              child: Obx(() => _buildTopBanner(_streamController.memberCount.value)),
             ),
             Positioned(
               left: 16,
+              bottom: 10.h,
+              width: 70.w,
+              height: 30.h,
+              child: _buildChatSection(),
+            ),
+            Obx(() => Stack(children: _streamController.hearts.toList())),
+            Positioned(
+              left: 16,
               right: 16,
-              bottom: 48,
+              bottom: 2.h,
               child: _buildComposer(),
             ),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildChatSection() {
+    return Obx(() {
+      return ListView.builder(
+        controller: _commentScrollController,
+        reverse: true,
+        itemCount: _streamController.comments.length,
+        itemBuilder: (context, index) {
+          final comment = _streamController.comments[index];
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8.0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (comment['avatar'] != null && comment['avatar'].isNotEmpty)
+                  CircleAvatar(
+                    radius: 12,
+                    backgroundImage: NetworkImage(comment['avatar']),
+                  )
+                else
+                  const CircleAvatar(
+                    radius: 12,
+                    child: Icon(Icons.person, size: 12),
+                  ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: RichText(
+                    text: TextSpan(
+                      children: [
+                        TextSpan(
+                          text: '${comment['username']}: ',
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
+                        ),
+                        TextSpan(
+                          text: comment['message'],
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    });
   }
 
   Widget _buildVideoStage() {
@@ -294,7 +329,7 @@ class _LiveStreamScreenState extends State<LiveStreamScreen> {
     );
   }
 
-  Widget _buildTopBanner() {
+  Widget _buildTopBanner(int memberCount) {
     return Container(
 
       margin: const EdgeInsets.only(left: 8,right: 120),
@@ -369,12 +404,12 @@ class _LiveStreamScreenState extends State<LiveStreamScreen> {
               ),
               const SizedBox(height: 2),
               Row(
-                children: const [
+                children:  [
                   Icon(Icons.remove_red_eye, color: Colors.white70, size: 12),
                   SizedBox(width: 4),
                   Text(
-                    '10.8k',
-                    style: TextStyle(
+                    memberCount > 1000 ? '${(memberCount / 1000).toStringAsFixed(1)}k' : '$memberCount',
+                    style: const TextStyle(
                       color: Colors.white70,
                       fontSize: 11,
                     ),
@@ -447,14 +482,14 @@ class _LiveStreamScreenState extends State<LiveStreamScreen> {
         ),
          SizedBox(width: 3.w),
         Padding(
-          padding: const EdgeInsets.only(bottom: 4.0),
+          padding: const EdgeInsets.only(bottom: 2.0),
           child: GestureDetector(
             onTap: () {
             },
             child:  SvgPicture.asset(
                 AppImages.giftIcon,
-                width: 5.w,
-                height: 5.h,
+                width: 4.5.w,
+                height: 4.5.h,
               ),
 
           ),
@@ -462,13 +497,14 @@ class _LiveStreamScreenState extends State<LiveStreamScreen> {
 
         SizedBox(width: 3.w),
         Padding(
-          padding: const EdgeInsets.all(4.0),
+          padding: const EdgeInsets.all(1.0),
           child: GestureDetector(
             onTap: () {
+              _streamController.sendLike(widget.event.id);
             },
             child: Container(
-              height: 50,
-              width: 50,
+              height: 40,
+              width: 40,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: const Color(0xFFE94335),

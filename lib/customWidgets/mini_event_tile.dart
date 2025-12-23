@@ -8,6 +8,7 @@ class MiniEventTile extends StatelessWidget {
   final String subtitle;
   final VoidCallback? onTap;
   final bool isAsset;
+  final int price;
 
   const MiniEventTile({
     super.key,
@@ -16,6 +17,7 @@ class MiniEventTile extends StatelessWidget {
     required this.subtitle,
     this.onTap,
     this.isAsset = true,
+    this.price = 0,
   });
 
   @override
@@ -65,6 +67,24 @@ class MiniEventTile extends StatelessWidget {
                     color: Colors.black.withValues(alpha: 0.6),
                   ),
                 ),
+                if (price > 0) ...[
+                  SizedBox(height: 0.5.h),
+                  Row(
+                    children: [
+                      const Icon(Icons.monetization_on, color: Colors.amber, size: 12),
+                      const SizedBox(width: 4),
+                      Text(
+                        '$price Coins',
+                        style: TextStyle(
+                          fontFamily: AppFonts.lato,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 1.2.h,
+                          color: Colors.amber[800],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),

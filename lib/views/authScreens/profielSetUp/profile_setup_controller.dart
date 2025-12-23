@@ -140,22 +140,26 @@ class ProfileSetupController extends GetxController {
               ),
             ),
             // Title
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Select Preferences',
-                  style: Get.textTheme.displayLarge?.copyWith(
-                    color: Colors.black,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 24,
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Get.back(),
-                ),
-              ],
+            Builder(
+              builder: (context) {
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Select Preferences',
+                      style: Get.textTheme.displayLarge?.copyWith(
+                        color: Colors.black,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 24,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ],
+                );
+              },
             ),
             const SizedBox(height: 12),
             const Text(
@@ -273,7 +277,12 @@ class ProfileSetupController extends GetxController {
           title: 'Success',
           message: 'Preferences updated successfully!',
         );
-        Get.back(); // Close bottom sheet
+        // Delay slightly to avoid conflict with snackbar
+        Future.delayed(const Duration(milliseconds: 100), () {
+          if (Get.isBottomSheetOpen == true) {
+            Navigator.of(Get.overlayContext!).pop();
+          }
+        });
       } else {
         AppLoadingDialog.hide();
         CustomSnackBar.error(
@@ -343,29 +352,33 @@ class ProfileSetupController extends GetxController {
 
   Future<void> showImageSourceDialog() async {
     await Get.dialog(
-      AlertDialog(
-        title: const Text('Select Image Source'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.photo_library),
-              title: const Text('Gallery'),
-              onTap: () {
-                Get.back();
-                pickImage();
-              },
+      Builder(
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Select Image Source'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.photo_library),
+                  title: const Text('Gallery'),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    pickImage();
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.camera_alt),
+                  title: const Text('Camera'),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    takePicture();
+                  },
+                ),
+              ],
             ),
-            ListTile(
-              leading: const Icon(Icons.camera_alt),
-              title: const Text('Camera'),
-              onTap: () {
-                Get.back();
-                takePicture();
-              },
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

@@ -6,10 +6,13 @@ class EventModel {
   final String time;
   final String duration;
   final String? advertisementUrl;
+  final String? organizerProfilePicture;
   final String organizerId;
   final String channelName;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final int price;
+  final List<String> participantIds;
 
   EventModel({
     required this.id,
@@ -19,10 +22,13 @@ class EventModel {
     required this.time,
     required this.duration,
     this.advertisementUrl,
+    this.organizerProfilePicture,
     required this.organizerId,
     required this.channelName,
     required this.createdAt,
     required this.updatedAt,
+    this.price = 0,
+    this.participantIds = const [],
   });
 
   Map<String, dynamic> toMap() {
@@ -34,10 +40,13 @@ class EventModel {
       "time": time,
       "duration": duration,
       "advertisementUrl": advertisementUrl,
+      "organizerProfilePicture": organizerProfilePicture,
       "organizerId": organizerId,
       "channelName": channelName,
       "createdAt": createdAt.toIso8601String(),
       "updatedAt": updatedAt.toIso8601String(),
+      "price": price,
+      "participants": participantIds,
     };
   }
 
@@ -50,8 +59,11 @@ class EventModel {
       time: map["time"]?.toString() ?? "",
       duration: map["duration"]?.toString() ?? "",
       advertisementUrl: map["advertisementUrl"]?.toString(),
+      organizerProfilePicture: (map["organizer"] is Map)
+          ? map["organizer"]["profilePicture"]?.toString()
+          : null,
       organizerId:
-          map["organizerId"]?.toString() ?? map["organizer"]?.toString() ?? "",
+          map["organizerId"]?.toString() ?? map["organizer"]?["_id"]?.toString() ?? "",
       channelName: map["channelName"]?.toString() ?? "",
       createdAt: map["createdAt"] != null
           ? DateTime.parse(map["createdAt"].toString())
@@ -59,6 +71,12 @@ class EventModel {
       updatedAt: map["updatedAt"] != null
           ? DateTime.parse(map["updatedAt"].toString())
           : DateTime.now(),
+      price: map["price"] is int
+          ? map["price"] as int
+          : int.tryParse(map["price"]?.toString() ?? "0") ?? 0,
+      participantIds: map["participants"] is List
+          ? (map["participants"] as List).map((e) => e.toString()).toList()
+          : [],
     );
   }
 

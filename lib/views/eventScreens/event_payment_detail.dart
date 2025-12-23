@@ -1,11 +1,10 @@
 import 'package:eventyzze/config/app_font.dart';
 import 'package:eventyzze/config/app_images.dart';
 import 'package:eventyzze/helper/navigation_helper.dart';
-import 'package:eventyzze/views/pubscriptionPrompt%20/successful_payment_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import '../../config/app_utils.dart'; // Ensure this contains your .h and .w extensions
 import '../../constants/enums.dart';
+import '../pubscriptionPrompt/successful_payment_screen.dart';
 
 class EventPaymentDetail extends StatefulWidget {
   const EventPaymentDetail({super.key});

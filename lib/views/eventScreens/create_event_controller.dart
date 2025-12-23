@@ -21,6 +21,7 @@ class CreateEventController extends GetxController {
   final TextEditingController dateController = TextEditingController();
   final TextEditingController timeController = TextEditingController();
   final TextEditingController durationController = TextEditingController();
+  final TextEditingController priceController = TextEditingController();
 
   final RxBool isLoading = false.obs;
   final Rx<File?> selectedAdFile = Rx<File?>(null);
@@ -35,6 +36,7 @@ class CreateEventController extends GetxController {
     dateController.dispose();
     timeController.dispose();
     durationController.dispose();
+    priceController.dispose();
     super.onClose();
   }
 
@@ -225,8 +227,11 @@ class CreateEventController extends GetxController {
   }
 
   Future<EventModel?> createEvent() async {
+    print('[CONTROLLER DEBUG] createEvent called');
+    
     // Validation
     if (titleController.text.trim().isEmpty) {
+      print('[CONTROLLER DEBUG] Validation failed: title empty');
       CustomSnackBar.error(
         title: 'Validation Error',
         message: 'Please enter event title.',
@@ -235,6 +240,7 @@ class CreateEventController extends GetxController {
     }
 
     if (descriptionController.text.trim().isEmpty) {
+      print('[CONTROLLER DEBUG] Validation failed: description empty');
       CustomSnackBar.error(
         title: 'Validation Error',
         message: 'Please enter event description.',
@@ -243,6 +249,7 @@ class CreateEventController extends GetxController {
     }
 
     if (selectedDate.value.isEmpty) {
+      print('[CONTROLLER DEBUG] Validation failed: date empty');
       CustomSnackBar.error(
         title: 'Validation Error',
         message: 'Please select event date.',
@@ -251,6 +258,7 @@ class CreateEventController extends GetxController {
     }
 
     if (selectedTime.value.isEmpty) {
+      print('[CONTROLLER DEBUG] Validation failed: time empty');
       CustomSnackBar.error(
         title: 'Validation Error',
         message: 'Please select event time.',
@@ -259,6 +267,7 @@ class CreateEventController extends GetxController {
     }
 
     if (selectedDuration.value.isEmpty) {
+      print('[CONTROLLER DEBUG] Validation failed: duration empty');
       CustomSnackBar.error(
         title: 'Validation Error',
         message: 'Please select event duration.',
@@ -266,21 +275,58 @@ class CreateEventController extends GetxController {
       return null;
     }
 
+    if (priceController.text.trim().isEmpty) {
+      CustomSnackBar.error(
+        title: 'Validation Error',
+        message: 'Please enter event price.',
+      );
+      return null;
+    }
+
+    final int? price = int.tryParse(priceController.text.trim());
+    if (price == null || price < 20) {
+      CustomSnackBar.error(
+        title: 'Validation Error',
+        message: 'Minimum event price is 20 coins.',
+      );
+      return null;
+    }
+
+    print('[CONTROLLER DEBUG] All validations passed');
+
     try {
       isLoading.value = true;
 
-      final dbId = await _sharedPrefsHelper.getDatabaseId();
+      var dbId = await _sharedPrefsHelper.getDatabaseId();
+      print('[CONTROLLER DEBUG] Database ID from SharedPrefs: $dbId');
+      
       if (dbId.isEmpty) {
-        CustomSnackBar.error(
-          title: 'Error',
-          message: 'User ID not found. Please login again.',
-        );
-        isLoading.value = false;
-        return null;
+        print('[CONTROLLER DEBUG] Database ID is empty, trying to get from Firebase user');
+        
+        // Try to get userId from SharedPreferences as fallback
+        final userId = await _sharedPrefsHelper.getUserId();
+        print('[CONTROLLER DEBUG] User ID from SharedPrefs: $userId');
+        
+        if (userId.isNotEmpty) {
+          // Use userId as database ID
+          dbId = userId;
+          // Save it for future use
+          await _sharedPrefsHelper.setDatabaseId(dbId);
+          print('[CONTROLLER DEBUG] Using userId as database ID: $dbId');
+        } else {
+          print('[CONTROLLER DEBUG] No userId found either');
+          CustomSnackBar.error(
+            title: 'Error',
+            message: 'User ID not found. Please login again.',
+          );
+          isLoading.value = false;
+          return null;
+        }
       }
 
       // Generate random channel name
       final channelName = generateRandomChannelName();
+      print('[CONTROLLER DEBUG] Generated channel name: $channelName');
 
       // Create FormData
       final formData = dio.FormData.fromMap({
@@ -291,7 +337,10 @@ class CreateEventController extends GetxController {
         'duration': selectedDuration.value,
         'organizerId': dbId,
         'channelName': channelName,
+        'price': int.tryParse(priceController.text.trim()) ?? 0,
       });
+      
+      print('[CONTROLLER DEBUG] FormData created with ${formData.fields.length} fields');
 
       // Add advertisement file if selected
       if (selectedAdFile.value != null) {
@@ -306,14 +355,21 @@ class CreateEventController extends GetxController {
             ),
           ),
         );
+        print('[CONTROLLER DEBUG] Advertisement file added: $fileName');
+      } else {
+        print('[CONTROLLER DEBUG] No advertisement file selected');
       }
 
+      print('[CONTROLLER DEBUG] Calling repository createEvent...');
       final createdEvent = await _eventRepository.createEvent(formData);
+      print('[CONTROLLER DEBUG] Repository returned. Event is null: ${createdEvent == null}');
 
       if (createdEvent != null) {
+        print('[CONTROLLER DEBUG] Event created successfully, returning event');
         // Return the created event - screen will handle success message and navigation
         return createdEvent;
       } else {
+        print('[CONTROLLER DEBUG] Repository returned null, showing error');
         CustomSnackBar.error(
           title: 'Error',
           message: 'Failed to create event. Please try again.',
@@ -321,6 +377,7 @@ class CreateEventController extends GetxController {
         return null;
       }
     } catch (e) {
+      print('[CONTROLLER DEBUG] Exception caught: $e');
       CustomSnackBar.error(
         title: 'Error',
         message: 'Failed to create event: ${e.toString()}',
@@ -328,6 +385,7 @@ class CreateEventController extends GetxController {
       return null;
     } finally {
       isLoading.value = false;
+      print('[CONTROLLER DEBUG] createEvent finished');
     }
   }
 }

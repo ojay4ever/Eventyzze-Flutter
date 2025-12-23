@@ -113,6 +113,31 @@ class ProfileRepositoryImpl implements ProfileRepository {
   }
 
   @override
+  Future<UserModel?> getCurrentUser() async {
+    try {
+      final response = await _dio.get(
+        '${ApiConstants.baseUrl}/profile/getCurrentUser',
+      );
+
+      if (response.statusCode == 200) {
+        final res = response.data;
+        final userJson = res is Map<String, dynamic>
+            ? (res['user'] ?? res['data'] ?? res)
+            : <String, dynamic>{};
+        return UserModel.fromJson(userJson);
+      }
+      logger.error('Failed to fetch current user: ${response.statusCode}');
+      return null;
+    } on DioException catch (dioError) {
+      logger.error('Dio error while fetching current user: ${dioError.message}');
+      return null;
+    } catch (e) {
+      logger.error('Unexpected error: $e');
+      return null;
+    }
+  }
+
+  @override
   Future<UserModel?> getOtherUserProfile(String id) async {
     try {
       final response = await _dio.get(

@@ -10,6 +10,7 @@ import 'package:eventyzze/model/event_model.dart';
 import 'package:eventyzze/model/stream_model.dart';
 import 'package:eventyzze/utils/custom_snack_bar.dart';
 import 'package:eventyzze/views/eventScreens/event_details_screen.dart';
+import 'package:eventyzze/views/eventScreens/event_payment_form_screen.dart';
 import 'package:eventyzze/views/homeScreens/commonWidget/common_title_text.dart';
 import 'package:eventyzze/views/homeScreens/home_controller.dart';
 import 'package:eventyzze/views/streamScreen/live_stream_screen.dart';
@@ -21,6 +22,7 @@ import 'package:get/get.dart';
 import '../../customWidgets/mini_event_tile.dart';
 import '../../customWidgets/custom_categories.dart';
 import '../../customWidgets/custom_event_card.dart';
+import '../eventScreens/event_payment_form_screen.dart';
 
 class HomePageViewer extends StatefulWidget {
   const HomePageViewer({super.key});
@@ -83,19 +85,55 @@ class _HomePageViewerState extends State<HomePageViewer> {
                 SizedBox(height: 2.h),
                 _liveShow(),
                 SizedBox(height: 1.6.h),
-                SizedBox(
-                  height: 36.h,
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
-                    children: [
-                      _liveShowCard(AppImages.man,onTap: (){
-                        NavigationHelper.goToNavigatorScreen(context, EventDetailsScreen());
-                      }),
-                      SizedBox(width: 1.6.h),
-                      _liveShowCard(AppImages.singGirl),
-                    ],
-                  ),
-                ),
+                Obx(() {
+                  final events = _homeController.trendingEvents;
+                  if (_homeController.isLoadingTrending.value) {
+                    return SizedBox(
+                      height: 36.h,
+                      child: const Center(child: CircularProgressIndicator()),
+                    );
+                  }
+                  
+                  if (events.isEmpty) {
+                    return SizedBox(
+                      height: 36.h,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        children: [
+                          _liveShowCard(AppImages.man, price: 50, onTap: () {
+
+                          }),
+                          SizedBox(width: 1.6.h),
+                          _liveShowCard(AppImages.singGirl, price: 100),
+                        ],
+                      ),
+                    );
+                  }
+                  
+                  return SizedBox(
+                    height: 36.h,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: events.length,
+                      separatorBuilder: (_, __) => SizedBox(width: 1.6.h),
+                      itemBuilder: (context, index) {
+                        final event = events[index];
+                        String? imageUrl;
+                        if (event.advertisementUrl != null && event.advertisementUrl!.trim().isNotEmpty) {
+                          imageUrl = event.advertisementUrl!.trim();
+                        } else if (event.organizerProfilePicture != null && event.organizerProfilePicture!.trim().isNotEmpty) {
+                          imageUrl = event.organizerProfilePicture!.trim();
+                        }
+                        
+                        return _liveShowCardFromUrl(
+                          imageUrl: imageUrl,
+                          price: event.price,
+                          onTap: () => _handleEventTap(event),
+                        );
+                      },
+                    ),
+                  );
+                }),
                 SizedBox(height: 2.h),
                 _eventDayCard(),
                 SizedBox(height: 2.h),
@@ -133,12 +171,122 @@ class _HomePageViewerState extends State<HomePageViewer> {
     );
   }
 
-  Widget _liveShowCard(String imagePath, {VoidCallback? onTap}) {
+
+  Widget _liveShowCard(String imagePath, {int price = 0, VoidCallback? onTap}) {
     return InkWell(
       onTap: onTap,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: Image.asset(imagePath, width: 220, height: 323, fit: BoxFit.cover),
+      child: Stack(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.asset(imagePath, width: 220, height: 323, fit: BoxFit.cover),
+          ),
+          if (price > 0)
+            Positioned(
+              top: 12,
+              right: 12,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.7),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.monetization_on,
+                      color: AppTheme.kPrimaryColor,
+                      size: 14,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '$price',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _liveShowCardFromUrl({String? imageUrl, int price = 0, VoidCallback? onTap}) {
+    return InkWell(
+      onTap: onTap,
+      child: Stack(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: imageUrl != null && imageUrl.isNotEmpty
+                ? Image.network(
+                    imageUrl,
+                    width: 220,
+                    height: 323,
+                    fit: BoxFit.cover,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Container(
+                        width: 220,
+                        height: 323,
+                        color: Colors.grey[200],
+                        child: const Center(child: CircularProgressIndicator()),
+                      );
+                    },
+                    errorBuilder: (context, error, stackTrace) {
+                      return Image.asset(
+                        AppImages.man,
+                        width: 220,
+                        height: 323,
+                        fit: BoxFit.cover,
+                      );
+                    },
+                  )
+                : Image.asset(
+                    AppImages.man,
+                    width: 220,
+                    height: 323,
+                    fit: BoxFit.cover,
+                  ),
+          ),
+          if (price > 0)
+            Positioned(
+              top: 12,
+              right: 12,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.7),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.monetization_on,
+                      color: AppTheme.kPrimaryColor,
+                      size: 14,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '$price',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -150,29 +298,84 @@ class _HomePageViewerState extends State<HomePageViewer> {
           height: 64,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
-            itemCount: 6,
+            itemCount: _homeController.trendingEvents.length > 0 
+                ? _homeController.trendingEvents.length 
+                : 6,
             separatorBuilder: (context, _) => const SizedBox(width: 12),
             itemBuilder: (context, index) {
-              final imageList = [
-                AppImages.firstP,
-                AppImages.second,
-                AppImages.third,
-                AppImages.fourth,
-                AppImages.fifth,
-                AppImages.sixth,
-              ];
-              return Container(
-                width: 60,
-                height: 60,
-                decoration: const BoxDecoration(shape: BoxShape.circle),
-                clipBehavior: Clip.hardEdge,
-                child: Image.asset(imageList[index], fit: BoxFit.cover),
-              );
+              return Obx(() {
+                final events = _homeController.trendingEvents;
+                if (events.length > index) {
+                  final event = events[index];
+                  String? imageUrl;
+                  
+                  if (event.advertisementUrl != null && event.advertisementUrl!.trim().isNotEmpty) {
+                    imageUrl = event.advertisementUrl!.trim();
+                  } else if (event.organizerProfilePicture != null && event.organizerProfilePicture!.trim().isNotEmpty) {
+                    imageUrl = event.organizerProfilePicture!.trim();
+                  }
+                  
+                  if (imageUrl != null && imageUrl.isNotEmpty) {
+                    return Container(
+                      width: 60,
+                      height: 60,
+                      decoration: const BoxDecoration(shape: BoxShape.circle),
+                      clipBehavior: Clip.hardEdge,
+                      child: Image.network(
+                        imageUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          if (index < 6) {
+                            return Image.asset(
+                              _getStaticImage(index),
+                              fit: BoxFit.cover,
+                            );
+                          }
+                          return Container(
+                            color: Colors.grey[300],
+                            child: Icon(Icons.event, color: Colors.grey[600]),
+                          );
+                        },
+                      ),
+                    );
+                  }
+                }
+                if (index < 6) {
+                  return Container(
+                    width: 60,
+                    height: 60,
+                    decoration: const BoxDecoration(shape: BoxShape.circle),
+                    clipBehavior: Clip.hardEdge,
+                    child: Image.asset(_getStaticImage(index), fit: BoxFit.cover),
+                  );
+                }
+                return Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.grey[300],
+                  ),
+                  child: Icon(Icons.event, color: Colors.grey[600], size: 24),
+                );
+              });
             },
           ),
         ),
       ],
     );
+  }
+
+  String _getStaticImage(int index) {
+    final imageList = [
+      AppImages.firstP,
+      AppImages.second,
+      AppImages.third,
+      AppImages.fourth,
+      AppImages.fifth,
+      AppImages.sixth,
+    ];
+    return imageList[index];
   }
 
   Widget _liveShow() {
@@ -207,15 +410,39 @@ class _HomePageViewerState extends State<HomePageViewer> {
   }
 
   Widget _eventDayCard() {
-    return CustomEventCard(
-      title: "The Show Of\nThe Century!",
-      artist: "-JohnSings",
-      date: "June 14th, 2025",
-      time: "4PM",
-      backgroundImage: AppImages.lightBg,
-      artistImage: AppImages.singingMen,
-      onTap: () {},
-    );
+    return Obx(() {
+      final events = _homeController.trendingEvents;
+      if (events.isEmpty) {
+        return CustomEventCard(
+          title: "The Show Of\nThe Century!",
+          artist: "-JohnSings",
+          date: "June 14th, 2025",
+          time: "4PM",
+          backgroundImage: AppImages.lightBg,
+          artistImage: AppImages.singingMen,
+          price: 50,
+          onTap: () {},
+        );
+      }
+      final event = events.first;
+      String? imageUrl;
+      if (event.advertisementUrl != null && event.advertisementUrl!.trim().isNotEmpty) {
+        imageUrl = event.advertisementUrl!.trim();
+      } else if (event.organizerProfilePicture != null && event.organizerProfilePicture!.trim().isNotEmpty) {
+        imageUrl = event.organizerProfilePicture!.trim();
+      }
+      
+      return CustomEventCardWithNetwork(
+        title: event.title,
+        artist: event.description.isNotEmpty ? event.description : "Event Details",
+        date: event.date,
+        time: event.time,
+        backgroundImage: AppImages.lightBg,
+        artistImageUrl: imageUrl,
+        price: event.price,
+        onTap: () => _handleEventTap(event),
+      );
+    });
   }
 
   Widget _miniEventCard() {
@@ -255,6 +482,7 @@ class _HomePageViewerState extends State<HomePageViewer> {
               isAsset: !hasAdImage,
               title: event.title,
               subtitle: event.description,
+              price: event.price,
               onTap: () => _handleEventTap(event),
             ),
           );
@@ -342,6 +570,27 @@ class _HomePageViewerState extends State<HomePageViewer> {
   }
 
   Future<void> _handleEventTap(EventModel event) async {
+    final currentUserId = await _sharedPrefsHelper.getDatabaseId();
+    final isOwner = currentUserId.isNotEmpty && currentUserId == event.organizerId;
+    final hasPurchased = event.participantIds.contains(currentUserId);
+
+    if (isOwner || hasPurchased) {
+      _joinEventStream(event);
+      return;
+    }
+
+    NavigationHelper.goToNavigatorScreen(
+      context,
+      EventPaymentFormScreen(
+        event: event,
+        onPaymentSuccess: () {
+          _joinEventStream(event);
+        },
+      ),
+    );
+  }
+
+  Future<void> _joinEventStream(EventModel event) async {
     final uid = _generateAgoraUid();
     final currentUserId = await _sharedPrefsHelper.getDatabaseId();
     final isHost =

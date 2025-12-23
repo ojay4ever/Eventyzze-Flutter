@@ -3,11 +3,14 @@ import 'package:eventyzze/constants/enums.dart';
 import 'package:eventyzze/customWidgets/custom_button.dart';
 import 'package:eventyzze/customWidgets/home_tab.dart';
 import 'package:eventyzze/helper/navigation_helper.dart';
+import 'package:eventyzze/model/event_model.dart';
 import 'package:flutter/material.dart';
 import '../../config/app_font.dart';
 
 class EventCreationConfirmation extends StatelessWidget {
-  const EventCreationConfirmation({super.key});
+  final EventModel event;
+  
+  const EventCreationConfirmation({super.key, required this.event});
 
   @override
   Widget build(BuildContext context) {
@@ -50,15 +53,18 @@ class EventCreationConfirmation extends StatelessWidget {
             right: 5.w,
             child: Container(
               height: 33.h,
-              decoration: const BoxDecoration(
-                borderRadius: BorderRadius.only(
+              decoration: BoxDecoration(
+                borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(25),
                   topRight: Radius.circular(25),
                 ),
-                image: DecorationImage(
-                  image: AssetImage(AppImages.confirmation),
-                  fit: BoxFit.cover,
+              ),
+              child: ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(25),
+                  topRight: Radius.circular(25),
                 ),
+                child: _buildEventImage(),
               ),
             ),
           ),
@@ -83,16 +89,19 @@ class EventCreationConfirmation extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
-                    "Shine On Music Festival",
+                    event.title,
                     style: TextStyle(
                       fontSize: 2.3.h,
                       fontWeight: FontWeight.bold,
                       color: Colors.black,
                     ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   SizedBox(height: 1.h),
                   Text(
-                    "24th Sept. 2024\n8:00pm (prompt)",
+                    "${event.date}\n${event.time}",
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 1.5.h,
@@ -115,13 +124,15 @@ class EventCreationConfirmation extends StatelessWidget {
                   ),
                   SizedBox(height: 2.h),
                   Text(
-                    "Lorem ipsum sit dolor amet, consectur adispiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. ut enim ad minim veniam...",
+                    event.description,
                     textAlign: TextAlign.start,
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.grey[500],
                       height: 1.4,
                     ),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
                   const Text(
@@ -188,6 +199,45 @@ class EventCreationConfirmation extends StatelessWidget {
     );
   }
 
+  Widget _buildEventImage() {
+    final imageUrl = event.advertisementUrl != null && 
+                     event.advertisementUrl!.trim().isNotEmpty
+        ? event.advertisementUrl!.trim()
+        : (event.organizerProfilePicture != null && 
+           event.organizerProfilePicture!.trim().isNotEmpty
+            ? event.organizerProfilePicture!.trim()
+            : null);
+
+    if (imageUrl != null) {
+      return Image.network(
+        imageUrl,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+        errorBuilder: (context, error, stackTrace) {
+          return Image.asset(
+            AppImages.confirmation,
+            fit: BoxFit.cover,
+          );
+        },
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Container(
+            color: Colors.grey[300],
+            child: const Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        },
+      );
+    }
+
+    return Image.asset(
+      AppImages.confirmation,
+      fit: BoxFit.cover,
+    );
+  }
+
   Widget _buildActionButtons(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -211,7 +261,142 @@ class EventCreationConfirmation extends StatelessWidget {
               borderColor: const Color(0xFFFF8038),
               textColor: Colors.black,
               onTap: () {
+                _showShareModal(context);
               },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showShareModal(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Share with :',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black,
+                      fontFamily: AppFonts.inter,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      child: const Icon(
+                        Icons.close,
+                        size: 24,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildShareOption(
+                    icon: AppImages.facebook,
+                    label: 'Facebook',
+                    onTap: () {
+                      // Handle Facebook share
+                      Navigator.pop(context);
+                    },
+                  ),
+                  _buildShareOption(
+                    icon: AppImages.instagram,
+                    label: 'Instagram',
+                    onTap: () {
+                      // Handle Instagram share
+                      Navigator.pop(context);
+                    },
+                  ),
+                  _buildShareOption(
+                    icon: AppImages.tiktok,
+                    label: 'TikTok',
+                    onTap: () {
+                      // Handle TikTok share
+                      Navigator.pop(context);
+                    },
+                  ),
+                  _buildShareOption(
+                    icon: AppImages.link,
+                    label: 'Copy Link',
+                    onTap: () {
+                      // Handle Copy Link
+                      Navigator.pop(context);
+                    },
+                  ),
+                  _buildShareOption(
+                    icon: AppImages.download,
+                    label: 'Download',
+                    onTap: () {
+                      // Handle Download
+                      Navigator.pop(context);
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildShareOption({
+    required String icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              borderRadius: BorderRadius.circular(12),
+            ),
+            padding: const EdgeInsets.all(12),
+            child: Image.asset(
+              icon,
+              fit: BoxFit.contain,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey[700],
+              fontWeight: FontWeight.w500,
+              fontFamily: AppFonts.inter,
             ),
           ),
         ],

@@ -46,7 +46,7 @@ class WelcomeScreen extends StatelessWidget {
                       left: width * 0.08,
                       top: sectionHeight * 0.08,
                       child: Text(
-                        "Eventyze",
+                        "Eventyzze",
                         style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: Colors.black,

@@ -15,7 +15,7 @@ class SignUpScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final AuthController controller = Get.put(AuthController());
+    final AuthController controller = Get.find<AuthController>();
 
     return Scaffold(
       body: SafeArea(
@@ -197,6 +197,7 @@ class SignUpScreen extends StatelessWidget {
                     ),
                     GestureDetector(
                       onTap: () {
+                        controller.clearFields();
                         NavigationHelper.goToNavigatorScreen(
                           context,
                           LoginScreen(),

@@ -3,6 +3,7 @@ import 'package:eventyzze/customWidgets/app_loading_dialog.dart';
 import 'package:eventyzze/customWidgets/custom_button.dart';
 import 'package:eventyzze/customWidgets/custom_text_field.dart';
 import 'package:eventyzze/helper/navigation_helper.dart';
+import 'package:eventyzze/model/event_model.dart';
 import 'package:eventyzze/utils/custom_snack_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -10,7 +11,9 @@ import '../../config/app_font.dart';
 import 'event_creation_confirmation.dart';
 
 class EventConfirmationScreen extends StatefulWidget {
-  const EventConfirmationScreen({super.key});
+  final EventModel event;
+  
+  const EventConfirmationScreen({super.key, required this.event});
 
   @override
   State<EventConfirmationScreen> createState() =>
@@ -123,7 +126,7 @@ class _EventConfirmationScreenState extends State<EventConfirmationScreen> {
                     onTap: () {
                       NavigationHelper.goToNavigatorScreen(
                         context,
-                        const EventCreationConfirmation(),
+                        EventCreationConfirmation(event: widget.event),
                       );
                     },
                     backgroundColor: const Color(0xFFFF6B35),
@@ -140,21 +143,55 @@ class _EventConfirmationScreenState extends State<EventConfirmationScreen> {
   }
 
   Widget _buildHeader(double width) {
+    final imageUrl = widget.event.advertisementUrl != null && 
+                     widget.event.advertisementUrl!.trim().isNotEmpty
+        ? widget.event.advertisementUrl!.trim()
+        : (widget.event.organizerProfilePicture != null && 
+           widget.event.organizerProfilePicture!.trim().isNotEmpty
+            ? widget.event.organizerProfilePicture!.trim()
+            : null);
+
     return Stack(
       children: [
         Container(
           height: 320,
           width: width,
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: Colors.grey,
-            borderRadius: BorderRadius.only(
+            borderRadius: const BorderRadius.only(
               bottomLeft: Radius.circular(60),
               bottomRight: Radius.circular(60),
             ),
-            image: DecorationImage(
-              image: AssetImage(AppImages.confirmation),
-              fit: BoxFit.cover,
+          ),
+          child: ClipRRect(
+            borderRadius: const BorderRadius.only(
+              bottomLeft: Radius.circular(60),
+              bottomRight: Radius.circular(60),
             ),
+            child: imageUrl != null
+                ? Image.network(
+                    imageUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Image.asset(
+                        AppImages.confirmation,
+                        fit: BoxFit.cover,
+                      );
+                    },
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Container(
+                        color: Colors.grey[300],
+                        child: const Center(
+                          child: CircularProgressIndicator(),
+                        ),
+                      );
+                    },
+                  )
+                : Image.asset(
+                    AppImages.confirmation,
+                    fit: BoxFit.cover,
+                  ),
           ),
         ),
         Container(
@@ -187,9 +224,9 @@ class _EventConfirmationScreenState extends State<EventConfirmationScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Shine On Music Festival',
-          style: TextStyle(
+        Text(
+          widget.event.title,
+          style: const TextStyle(
             fontSize: 20,
             fontFamily: AppFonts.inter,
             fontWeight: FontWeight.bold,
@@ -198,9 +235,9 @@ class _EventConfirmationScreenState extends State<EventConfirmationScreen> {
           ),
         ),
         const SizedBox(height: 12),
-        _buildIconTextRow(Icons.calendar_today_outlined, '24th Sept. 2024'),
+        _buildIconTextRow(Icons.calendar_today_outlined, widget.event.date),
         const SizedBox(height: 8),
-        _buildIconTextRow(Icons.access_time, '8:00pm'),
+        _buildIconTextRow(Icons.access_time, widget.event.time),
         const SizedBox(height: 20),
         const Text(
           'Description:',
@@ -212,26 +249,16 @@ class _EventConfirmationScreenState extends State<EventConfirmationScreen> {
           ),
         ),
         const SizedBox(height: 6),
-        RichText(
-          text: TextSpan(
-            text:
-                'Lorem ipsum sit dolor amet, consectur adispiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. ut enim ad minim veniam... ',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[600],
-              height: 1.5,
-              fontFamily: AppFonts.lato,
-            ),
-            children: const [
-              TextSpan(
-                text: 'Read More',
-                style: TextStyle(
-                  color: Color(0xFFFF6B35),
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
+        Text(
+          widget.event.description,
+          style: TextStyle(
+            fontSize: 14,
+            color: Colors.grey[600],
+            height: 1.5,
+            fontFamily: AppFonts.lato,
           ),
+          maxLines: 4,
+          overflow: TextOverflow.ellipsis,
         ),
       ],
     );

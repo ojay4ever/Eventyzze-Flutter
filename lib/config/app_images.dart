@@ -24,6 +24,12 @@ class AppImages {
   static const String man1 = "assets/images/man1.jpg";
   static const String eventyzzeLogo = "assets/images/logo.png";
   static const String confirmation = "assets/images/confirmation.png";
+  static const String facebook = "assets/images/facebook.png";
+  static const String tiktok = "assets/images/tiktok.png";
+  static const String instagram = "assets/images/instagram_icon.png";
+  static const String download = "assets/images/download.png";
+  static const String link = "assets/images/link.png";
+
 
 
 

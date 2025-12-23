@@ -13,7 +13,7 @@ class LoginScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final AuthController controller = Get.put(AuthController());
+    final AuthController controller = Get.find<AuthController>();
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -44,16 +44,52 @@ class LoginScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 40),
-                CustomTextField(
-                  controller: controller.emailController,
-                  hintText: "Email",
-                  keyboardType: TextInputType.emailAddress,
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    CustomTextField(
+                      controller: controller.emailController,
+                      hintText: "Email",
+                      keyboardType: TextInputType.emailAddress,
+                    ),
+                    Obx(() {
+                      if (controller.emailError.value.isEmpty) {
+                        return SizedBox.shrink();
+                      } else {
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 8.0, left: 8.0),
+                          child: Text(
+                            controller.emailError.value,
+                            style: TextStyle(color: Colors.red, fontSize: 12),
+                          ),
+                        );
+                      }
+                    }),
+                  ],
                 ),
                 const SizedBox(height: 16),
-                CustomTextField(
-                  controller: controller.passwordController,
-                  hintText: "Password",
-                  obscureText: true,
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    CustomTextField(
+                      controller: controller.passwordController,
+                      hintText: "Password",
+                      obscureText: true,
+                    ),
+                    Obx(() {
+                      if (controller.passwordError.value.isEmpty) {
+                        return SizedBox.shrink();
+                      } else {
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 8.0, left: 8.0),
+                          child: Text(
+                            controller.passwordError.value,
+                            style: TextStyle(color: Colors.red, fontSize: 12),
+                          ),
+                        );
+                      }
+                    }),
+                  ],
                 ),
                 const SizedBox(height: 24),
 
@@ -142,6 +178,7 @@ class LoginScreen extends StatelessWidget {
                   backgroundColor: Colors.white,
                   borderColor: const Color(0xFFFF8038),
                   onTap: () {
+                    controller.clearFields();
                     NavigationHelper.goToNavigatorScreen(
                         context, const SignUpScreen());
                   },

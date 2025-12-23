@@ -49,7 +49,7 @@ class AppLoadingDialog {
           ),
         ),
       ),
-      barrierDismissible: true, // Allow dismissing by tapping outside
+      barrierDismissible: true,
     ).then((_) {
       _isShowing = false;
     });
@@ -59,12 +59,10 @@ class AppLoadingDialog {
     if (!_isShowing) return;
     
     try {
-      // Check if Get context is available and if dialog is actually open
-      if (Get.isDialogOpen == true) {
-        Get.back(closeOverlays: false);
+      if (Get.isDialogOpen == true && Get.overlayContext != null) {
+        Navigator.of(Get.overlayContext!).pop();
       }
     } catch (e) {
-      // Silently catch any errors - dialog might already be closed
     } finally {
       _isShowing = false;
     }

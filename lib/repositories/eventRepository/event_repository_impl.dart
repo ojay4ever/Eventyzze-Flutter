@@ -43,6 +43,7 @@ class EventRepositoryImpl implements EventRepository {
   Future<List<EventModel>> getEvents() async {
     try {
       final response = await _dio.get('${ApiConstants.baseUrl}/events');
+      logger.info('Response get: (${response.statusCode}): ${response.data}');
 
       if (response.statusCode == 200) {
         final res = response.data;
@@ -83,6 +84,27 @@ class EventRepositoryImpl implements EventRepository {
     } catch (e) {
       logger.error('Unexpected error: $e');
       return null;
+    }
+  }
+
+  @override
+  Future<bool> purchaseTicket(String eventId) async {
+    try {
+      final response = await _dio.post(
+        '${ApiConstants.baseUrl}/events/$eventId/purchase',
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return true;
+      }
+      return false;
+    } on DioException catch (dioError) {
+      logger.error('Dio error while purchasing ticket: ${dioError.message}');
+      final errorMessage = dioError.response?.data?['error'] ?? dioError.message;
+      throw errorMessage;
+    } catch (e) {
+      logger.error('Unexpected error: $e');
+      return false;
     }
   }
 }
